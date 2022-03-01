@@ -1,7 +1,6 @@
 module Backend exposing (..)
 
 import Env
-import Html
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import Set
@@ -50,29 +49,26 @@ update msg model =
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
-        GetViewerDataRequest ->
+        GetDataRequest maybePassword ->
             let
                 participants =
                     participantCount model
             in
-            ( model
-            , Lamdera.sendToFrontend
-                clientId
-                (GetViewerDataResponse { latestSlide = model.latestSlide, participants = participants })
-            )
-
-        GetPresenterDataRequest password ->
-            if password == Env.password then
-                let
-                    participants =
-                        participantCount model
-                in
+            if maybePassword == Just Env.password || model.presenter == Just sessionId then
                 ( { model | presenter = Just sessionId }
-                , Lamdera.sendToFrontend clientId (GetPresenterDataResponse (Ok { participants = participants }))
+                , { participants = participants, latestSlide = model.latestSlide }
+                    |> PresenterData
+                    |> GetDataResponse
+                    |> Lamdera.sendToFrontend clientId
                 )
 
             else
-                ( model, Lamdera.sendToFrontend clientId (GetPresenterDataResponse (Err ())) )
+                ( model
+                , { participants = participants, latestSlide = model.latestSlide }
+                    |> ViewerData
+                    |> GetDataResponse
+                    |> Lamdera.sendToFrontend clientId
+                )
 
 
 participantCount : BackendModel -> Int

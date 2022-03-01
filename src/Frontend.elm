@@ -32,9 +32,15 @@ urlParser =
 init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
 init url key =
     ( Loading key
-    , case Url.Parser.parse urlParser url of
-        Just (Just password) ->
-            Lamdera.sendToBackend (GetPresenterDataRequest password)
+    , Cmd.batch
+        [ case Url.Parser.parse urlParser url of
+            Just (Just password) ->
+                Lamdera.sendToBackend (GetDataRequest (Just password))
+
+            _ ->
+                Lamdera.sendToBackend (GetDataRequest Nothing)
+        , Nav.replaceUrl key "/"
+        ]
     )
 
 
@@ -45,7 +51,7 @@ update msg model =
             case urlRequest of
                 Internal url ->
                     ( model
-                    , Nav.pushUrl model.key (Url.toString url)
+                    , Nav.pushUrl (Types.getKey model) (Url.toString url)
                     )
 
                 External url ->
@@ -63,8 +69,38 @@ update msg model =
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
-        NoOpToFrontend ->
-            ( model, Cmd.none )
+        ParticipantCountChanged participants ->
+            ( case model of
+                Loading _ ->
+                    model
+
+                Presenter presenter ->
+                    Presenter { presenter | participants = participants }
+
+                Viewer viewer ->
+                    Viewer { viewer | participants = participants }
+            , Cmd.none
+            )
+
+        GetDataResponse result ->
+            ( case model of
+                Loading key ->
+                    case result of
+                        PresenterData { participants, latestSlide } ->
+                            Presenter { currentSlide = latestSlide, key = key, participants = participants }
+
+                        ViewerData { participants, latestSlide } ->
+                            Viewer
+                                { currentSlide = latestSlide
+                                , latestSlide = latestSlide
+                                , key = key
+                                , participants = participants
+                                }
+
+                _ ->
+                    model
+            , Cmd.none
+            )
 
 
 view : FrontendModel -> Browser.Document FrontendMsg
@@ -73,7 +109,16 @@ view model =
     , body =
         [ Element.layout
             []
-            Element.none
+            (case model of
+                Loading _ ->
+                    Element.none
+
+                Presenter record ->
+                    Element.text "presenting"
+
+                Viewer record ->
+                    Element.text "viewing"
+            )
         ]
     }
 

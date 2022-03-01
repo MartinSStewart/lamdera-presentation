@@ -12,12 +12,27 @@ type FrontendModel
     | Presenter
         { currentSlide : Int
         , participants : Int
+        , key : Key
         }
     | Viewer
         { latestSlide : Int
         , currentSlide : Int
         , participants : Int
+        , key : Key
         }
+
+
+getKey : FrontendModel -> Key
+getKey model =
+    case model of
+        Loading key ->
+            key
+
+        Presenter { key } ->
+            key
+
+        Viewer { key } ->
+            key
 
 
 type alias BackendModel =
@@ -34,8 +49,7 @@ type FrontendMsg
 
 
 type ToBackend
-    = GetViewerDataRequest
-    | GetPresenterDataRequest String
+    = GetDataRequest (Maybe String)
 
 
 type BackendMsg
@@ -45,5 +59,9 @@ type BackendMsg
 
 type ToFrontend
     = ParticipantCountChanged Int
-    | GetViewerDataResponse { latestSlide : Int, participants : Int }
-    | GetPresenterDataResponse (Result () { participants : Int })
+    | GetDataResponse Data
+
+
+type Data
+    = ViewerData { latestSlide : Int, participants : Int }
+    | PresenterData { latestSlide : Int, participants : Int }
