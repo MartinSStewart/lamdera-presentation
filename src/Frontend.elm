@@ -1,13 +1,17 @@
 module Frontend exposing (..)
 
 import Browser exposing (UrlRequest(..))
+import Browser.Dom
+import Browser.Events
 import Browser.Navigation
-import Element
+import Element exposing (Element)
+import Env
 import Html
 import Html.Attributes as Attr
 import Keyboard
 import Lamdera
 import List.Extra as List
+import Task
 import Types exposing (..)
 import Url
 import Url.Parser exposing ((<?>))
@@ -21,7 +25,12 @@ app =
         , onUrlChange = UrlChanged
         , update = update
         , updateFromBackend = updateFromBackend
-        , subscriptions = \_ -> Sub.map KeyboardMsg Keyboard.subscriptions
+        , subscriptions =
+            \_ ->
+                Sub.batch
+                    [ Sub.map KeyboardMsg Keyboard.subscriptions
+                    , Browser.Events.onResize (\w h -> GotWindowSize { width = w, height = h })
+                    ]
         , view = view
         }
 
@@ -33,7 +42,7 @@ urlParser =
 
 init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
 init url key =
-    ( Loading key
+    ( Loading key Nothing Nothing
     , Cmd.batch
         [ case Url.Parser.parse urlParser url of
             Just (Just password) ->
@@ -42,13 +51,32 @@ init url key =
             _ ->
                 Lamdera.sendToBackend (GetDataRequest Nothing)
         , Browser.Navigation.replaceUrl key "/"
+        , Task.perform
+            (\{ scene } -> GotWindowSize { width = floor scene.width, height = floor scene.height })
+            Browser.Dom.getViewport
         ]
     )
 
 
-slides =
-    [ Element.text "Slide 1"
+slides : Size -> List (Element msg)
+slides windowSize =
+    [ Element.column
+        [ Element.spacing 64, Element.centerX, Element.centerY ]
+        [ Element.text "Hobby scale: making web apps with minimal fuss"
+        , Element.text ("The presentation is interactive, join at: " ++ Env.domain)
+        ]
+    , Element.text "A little about me: I like making web apps in my free time" |> centered
+    , Element.column
+        []
+        [ Element.text "For example, here's a simple app where everyone can fight over what the best color is"
+        , iframe { windowSize | height = windowSize.height - 40 } "https://the-best-color.lamdera.app" |> Element.html
+        ]
     ]
+
+
+centered : Element msg -> Element msg
+centered element =
+    Element.el [ Element.centerX, Element.centerY ] element
 
 
 update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -66,7 +94,7 @@ update msg model =
                     , Browser.Navigation.load url
                     )
 
-        UrlChanged url ->
+        UrlChanged _ ->
             ( model, Cmd.none )
 
         KeyboardMsg keyMsg ->
@@ -81,14 +109,16 @@ update msg model =
 
                         newSlide : Int
                         newSlide =
-                            if keyPressed Keyboard.ArrowRight then
+                            (if keyPressed Keyboard.ArrowRight then
                                 presenter.currentSlide + 1
 
-                            else if keyPressed Keyboard.ArrowLeft then
+                             else if keyPressed Keyboard.ArrowLeft then
                                 presenter.currentSlide - 1
 
-                            else
+                             else
                                 presenter.currentSlide
+                            )
+                                |> clamp 0 (List.length (slides presenter.windowSize))
                     in
                     ( Presenter
                         { presenter
@@ -105,13 +135,26 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        GotWindowSize size ->
+            ( case model of
+                Loading navigationKey _ maybeData ->
+                    tryLoading navigationKey (Just size) maybeData
+
+                Presenter presenter ->
+                    Presenter { presenter | windowSize = size }
+
+                Viewer viewer ->
+                    Viewer { viewer | windowSize = size }
+            , Cmd.none
+            )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
         ParticipantCountChanged participants ->
             ( case model of
-                Loading _ ->
+                Loading _ _ _ ->
                     model
 
                 Presenter presenter ->
@@ -122,25 +165,10 @@ updateFromBackend msg model =
             , Cmd.none
             )
 
-        GetDataResponse result ->
+        GetDataResponse data ->
             ( case model of
-                Loading navigationKey ->
-                    case result of
-                        PresenterData { participants, latestSlide } ->
-                            Presenter
-                                { currentSlide = latestSlide
-                                , navigationKey = navigationKey
-                                , participants = participants
-                                , keys = []
-                                }
-
-                        ViewerData { participants, latestSlide } ->
-                            Viewer
-                                { currentSlide = latestSlide
-                                , latestSlide = latestSlide
-                                , navigationKey = navigationKey
-                                , participants = participants
-                                }
+                Loading navigationKey maybeWindowSize _ ->
+                    tryLoading navigationKey maybeWindowSize (Just data)
 
                 _ ->
                     model
@@ -156,6 +184,31 @@ updateFromBackend msg model =
                     ( model, Cmd.none )
 
 
+tryLoading : Browser.Navigation.Key -> Maybe Size -> Maybe Data -> FrontendModel
+tryLoading navigationKey maybeWindowSize maybeData =
+    case ( maybeData, maybeWindowSize ) of
+        ( Just (PresenterData { participants, latestSlide }), Just windowSize ) ->
+            Presenter
+                { currentSlide = latestSlide
+                , navigationKey = navigationKey
+                , participants = participants
+                , keys = []
+                , windowSize = windowSize
+                }
+
+        ( Just (ViewerData { participants, latestSlide }), Just windowSize ) ->
+            Viewer
+                { currentSlide = latestSlide
+                , latestSlide = latestSlide
+                , navigationKey = navigationKey
+                , participants = participants
+                , windowSize = windowSize
+                }
+
+        _ ->
+            Loading navigationKey maybeWindowSize maybeData
+
+
 view : FrontendModel -> Browser.Document FrontendMsg
 view model =
     { title = ""
@@ -163,23 +216,25 @@ view model =
         [ Element.layout
             []
             (case model of
-                Loading _ ->
+                Loading _ _ _ ->
                     Element.none
 
                 Presenter presenter ->
-                    List.getAt presenter.currentSlide slides |> Maybe.withDefault Element.none
+                    List.getAt presenter.currentSlide (slides presenter.windowSize) |> Maybe.withDefault Element.none
 
                 Viewer viewer ->
-                    List.getAt viewer.currentSlide slides |> Maybe.withDefault Element.none
+                    List.getAt viewer.currentSlide (slides viewer.windowSize) |> Maybe.withDefault Element.none
             )
         ]
     }
 
 
-iframe src =
+iframe : { width : Int, height : Int } -> String -> Html.Html msg
+iframe { width, height } src =
     Html.iframe
         [ Attr.src src
-        , Attr.width 1000
-        , Attr.height 1000
+        , Attr.width width
+        , Attr.height height
+        , Attr.style "border" "0"
         ]
         []

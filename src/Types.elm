@@ -9,25 +9,31 @@ import Url exposing (Url)
 
 
 type FrontendModel
-    = Loading Browser.Navigation.Key
+    = Loading Browser.Navigation.Key (Maybe Size) (Maybe Data)
     | Presenter
         { currentSlide : Int
         , participants : Int
         , navigationKey : Browser.Navigation.Key
         , keys : List Keyboard.Key
+        , windowSize : Size
         }
     | Viewer
         { latestSlide : Int
         , currentSlide : Int
         , participants : Int
         , navigationKey : Browser.Navigation.Key
+        , windowSize : Size
         }
+
+
+type alias Size =
+    { width : Int, height : Int }
 
 
 getKey : FrontendModel -> Browser.Navigation.Key
 getKey model =
     case model of
-        Loading key ->
+        Loading key _ _ ->
             key
 
         Presenter { navigationKey } ->
@@ -48,6 +54,7 @@ type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | KeyboardMsg Keyboard.Msg
+    | GotWindowSize Size
 
 
 type ToBackend
@@ -67,5 +74,9 @@ type ToFrontend
 
 
 type Data
-    = ViewerData { latestSlide : Int, participants : Int }
-    | PresenterData { latestSlide : Int, participants : Int }
+    = ViewerData LoadingData
+    | PresenterData LoadingData
+
+
+type alias LoadingData =
+    { latestSlide : Int, participants : Int }
