@@ -1,38 +1,40 @@
 module Types exposing (..)
 
 import Browser exposing (UrlRequest)
-import Browser.Navigation exposing (Key)
+import Browser.Navigation
+import Keyboard
 import Lamdera exposing (ClientId, SessionId)
 import Set exposing (Set)
 import Url exposing (Url)
 
 
 type FrontendModel
-    = Loading Key
+    = Loading Browser.Navigation.Key
     | Presenter
         { currentSlide : Int
         , participants : Int
-        , key : Key
+        , navigationKey : Browser.Navigation.Key
+        , keys : List Keyboard.Key
         }
     | Viewer
         { latestSlide : Int
         , currentSlide : Int
         , participants : Int
-        , key : Key
+        , navigationKey : Browser.Navigation.Key
         }
 
 
-getKey : FrontendModel -> Key
+getKey : FrontendModel -> Browser.Navigation.Key
 getKey model =
     case model of
         Loading key ->
             key
 
-        Presenter { key } ->
-            key
+        Presenter { navigationKey } ->
+            navigationKey
 
-        Viewer { key } ->
-            key
+        Viewer { navigationKey } ->
+            navigationKey
 
 
 type alias BackendModel =
@@ -45,11 +47,12 @@ type alias BackendModel =
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
-    | NoOpFrontendMsg
+    | KeyboardMsg Keyboard.Msg
 
 
 type ToBackend
     = GetDataRequest (Maybe String)
+    | ChangeSlideRequest Int
 
 
 type BackendMsg
@@ -60,6 +63,7 @@ type BackendMsg
 type ToFrontend
     = ParticipantCountChanged Int
     | GetDataResponse Data
+    | ChangeSlideNotification Int
 
 
 type Data

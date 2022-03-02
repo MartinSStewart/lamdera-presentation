@@ -70,6 +70,28 @@ updateFromFrontend sessionId clientId msg model =
                     |> Lamdera.sendToFrontend clientId
                 )
 
+        ChangeSlideRequest slide ->
+            if Just sessionId == model.presenter then
+                let
+                    newLatestSlide =
+                        max model.latestSlide slide
+                in
+                ( { model | latestSlide = newLatestSlide }
+                , Set.toList model.participants
+                    |> List.filterMap
+                        (\( _, clientId_ ) ->
+                            if clientId_ == clientId then
+                                Nothing
+
+                            else
+                                Lamdera.sendToFrontend clientId (ChangeSlideNotification slide) |> Just
+                        )
+                    |> Cmd.batch
+                )
+
+            else
+                ( model, Cmd.none )
+
 
 participantCount : BackendModel -> Int
 participantCount model =
