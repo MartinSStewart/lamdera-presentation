@@ -65,6 +65,10 @@ titleFontSize =
     Element.Font.size 32
 
 
+secondaryFontSize =
+    Element.Font.size 24
+
+
 slides : Bool -> Int -> Size -> List (Element msg)
 slides isPresenter participantCount windowSize =
     [ Element.el
@@ -77,7 +81,7 @@ slides isPresenter participantCount windowSize =
             , Element.centerY
             , (if participantCount > 1 then
                 String.fromInt (participantCount - 1)
-                    ++ (if participantCount == 1 then
+                    ++ (if participantCount - 1 == 1 then
                             " person has joined"
 
                         else
@@ -96,7 +100,7 @@ slides isPresenter participantCount windowSize =
                 Element.column
                     [ Element.spacing 8, Element.centerX ]
                     [ Element.el [ Element.centerX ] (Element.text "This presentation is interactive, join here: ")
-                    , Element.el [ Element.centerX, Element.Font.size 24 ] (Element.text Env.domain)
+                    , Element.el [ Element.centerX, secondaryFontSize ] (Element.text Env.domain)
                     , Element.el [ Element.centerX ] qrCodeElement
                     ]
 
@@ -118,6 +122,56 @@ slides isPresenter participantCount windowSize =
             |> Element.html
             |> Element.el [ Element.centerX ]
         ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8 ]
+        [ Element.paragraph [ titleFontSize ] [ Element.text "2 years ago I wouldn't have bothered making this app" ]
+        , Element.column
+            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
+            [ Element.text "• The business logic is simple"
+            , Element.text "• But a lot of infrastructure work is still needed"
+            ]
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8 ]
+        [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist" ]
+        , Element.column
+            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
+            (List.map (\( _, text ) -> Element.text ("☐  " ++ text)) checklist)
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8 ]
+        [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist" ]
+        , Element.column
+            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
+            (List.map
+                (\( handledByLamdera, text ) ->
+                    Element.text
+                        ((if handledByLamdera then
+                            "☑  "
+
+                          else
+                            "☐  "
+                         )
+                            ++ text
+                        )
+                )
+                checklist
+            )
+        ]
+    ]
+
+
+checklist : List ( Bool, String )
+checklist =
+    [ ( True, "Set up database" )
+    , ( True, "Write code to query/write to database" )
+    , ( True, "Write code to handle sending data to/from frontend/backend (raw http? graphQL? websockets?)" )
+    , ( True, "Setup hot reloading for local development" )
+    , ( True, "Setup running the backend for local development" )
+    , ( True, "Write deploy scripts for database, frontend, and backend" )
+    , ( True, "Setup server hosting" )
+    , ( False, "Write backend business logic" )
+    , ( False, "Write frontend business logic" )
     ]
 
 
