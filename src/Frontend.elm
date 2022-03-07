@@ -5,6 +5,7 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation
 import Element exposing (Element)
+import Element.Font
 import Env
 import Html
 import Html.Attributes as Attr
@@ -58,13 +59,35 @@ init url key =
     )
 
 
-slides : Size -> List (Element msg)
-slides windowSize =
-    [ Element.column
-        [ Element.spacing 64, Element.centerX, Element.centerY ]
-        [ Element.text "Hobby scale: making web apps with minimal fuss"
-        , Element.text ("The presentation is interactive, join at: " ++ Env.domain)
+slides : Int -> Size -> List (Element msg)
+slides participantCount windowSize =
+    [ Element.el
+        [ Element.width Element.fill
+        , Element.height Element.fill
         ]
+        (Element.column
+            [ Element.spacing 64
+            , Element.centerX
+            , Element.centerY
+            , (if participantCount > 2 then
+                String.fromInt (participantCount - 1)
+                    ++ " people have joined"
+                    |> Element.text
+                    |> Element.el [ Element.centerX, Element.moveDown 32 ]
+
+               else
+                Element.none
+              )
+                |> Element.below
+            ]
+            [ Element.el [ Element.Font.size 28 ] (Element.text "Hobby scale: making web apps with minimal fuss")
+            , Element.column
+                [ Element.spacing 8, Element.centerX ]
+                [ Element.el [ Element.centerX ] (Element.text "This presentation is interactive, join at: ")
+                , Element.el [ Element.centerX ] (Element.text Env.domain)
+                ]
+            ]
+        )
     , Element.text "A little about me: I like making web apps in my free time" |> centered
     , Element.column
         []
@@ -118,7 +141,7 @@ update msg model =
                              else
                                 presenter.currentSlide
                             )
-                                |> clamp 0 (List.length (slides presenter.windowSize))
+                                |> clamp 0 (List.length (slides presenter.participants presenter.windowSize))
                     in
                     ( Presenter
                         { presenter
@@ -220,10 +243,12 @@ view model =
                     Element.none
 
                 Presenter presenter ->
-                    List.getAt presenter.currentSlide (slides presenter.windowSize) |> Maybe.withDefault Element.none
+                    List.getAt presenter.currentSlide (slides presenter.participants presenter.windowSize)
+                        |> Maybe.withDefault Element.none
 
                 Viewer viewer ->
-                    List.getAt viewer.currentSlide (slides viewer.windowSize) |> Maybe.withDefault Element.none
+                    List.getAt viewer.currentSlide (slides viewer.participants viewer.windowSize)
+                        |> Maybe.withDefault Element.none
             )
         ]
     }
