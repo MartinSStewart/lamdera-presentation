@@ -12,6 +12,8 @@ import Html.Attributes as Attr
 import Keyboard
 import Lamdera
 import List.Extra as List
+import QRCode
+import Svg.Attributes
 import Task
 import Types exposing (..)
 import Url
@@ -59,8 +61,12 @@ init url key =
     )
 
 
-slides : Int -> Size -> List (Element msg)
-slides participantCount windowSize =
+titleFontSize =
+    Element.Font.size 32
+
+
+slides : Bool -> Int -> Size -> List (Element msg)
+slides isPresenter participantCount windowSize =
     [ Element.el
         [ Element.width Element.fill
         , Element.height Element.fill
@@ -69,30 +75,48 @@ slides participantCount windowSize =
             [ Element.spacing 64
             , Element.centerX
             , Element.centerY
-            , (if participantCount > 2 then
+            , (if participantCount > 1 then
                 String.fromInt (participantCount - 1)
-                    ++ " people have joined"
+                    ++ (if participantCount == 1 then
+                            " person has joined"
+
+                        else
+                            " people have joined"
+                       )
                     |> Element.text
-                    |> Element.el [ Element.centerX, Element.moveDown 32 ]
+                    |> Element.el [ Element.centerX, Element.moveDown 24 ]
 
                else
                 Element.none
               )
                 |> Element.below
             ]
-            [ Element.el [ Element.Font.size 28 ] (Element.text "Hobby scale: making web apps with minimal fuss")
-            , Element.column
-                [ Element.spacing 8, Element.centerX ]
-                [ Element.el [ Element.centerX ] (Element.text "This presentation is interactive, join at: ")
-                , Element.el [ Element.centerX ] (Element.text Env.domain)
-                ]
+            [ Element.el [ titleFontSize ] (Element.text "Hobby scale: making web apps with minimal fuss")
+            , if isPresenter then
+                Element.column
+                    [ Element.spacing 8, Element.centerX ]
+                    [ Element.el [ Element.centerX ] (Element.text "This presentation is interactive, join here: ")
+                    , Element.el [ Element.centerX, Element.Font.size 24 ] (Element.text Env.domain)
+                    , Element.el [ Element.centerX ] qrCodeElement
+                    ]
+
+              else
+                Element.none
             ]
         )
-    , Element.text "A little about me: I like making web apps in my free time" |> centered
     , Element.column
-        []
-        [ Element.text "For example, here's a simple app where everyone can fight over what the best color is"
-        , iframe { windowSize | height = windowSize.height - 40 } "https://the-best-color.lamdera.app" |> Element.html
+        [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
+        [ Element.el [ Element.centerX ] (Element.text "A little about me:")
+        , Element.text "I like making web apps in my free time"
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ Element.paragraph [ titleFontSize, Element.Font.center ] [ Element.text "Here's an app where you can fight over which color is the best" ]
+        , iframe
+            { width = windowSize.width - 500, height = windowSize.height - 160 }
+            "https://the-best-color.lamdera.app"
+            |> Element.html
+            |> Element.el [ Element.centerX ]
         ]
     ]
 
@@ -141,7 +165,7 @@ update msg model =
                              else
                                 presenter.currentSlide
                             )
-                                |> clamp 0 (List.length (slides presenter.participants presenter.windowSize))
+                                |> clamp 0 (List.length (slides True presenter.participants presenter.windowSize))
                     in
                     ( Presenter
                         { presenter
@@ -243,15 +267,29 @@ view model =
                     Element.none
 
                 Presenter presenter ->
-                    List.getAt presenter.currentSlide (slides presenter.participants presenter.windowSize)
+                    List.getAt presenter.currentSlide (slides True presenter.participants presenter.windowSize)
                         |> Maybe.withDefault Element.none
 
                 Viewer viewer ->
-                    List.getAt viewer.currentSlide (slides viewer.participants viewer.windowSize)
+                    List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize)
                         |> Maybe.withDefault Element.none
             )
         ]
     }
+
+
+qrCodeElement =
+    case QRCode.fromString Env.domain of
+        Ok qrCode ->
+            QRCode.toSvg
+                [ Svg.Attributes.width "200px"
+                , Svg.Attributes.height "200px"
+                ]
+                qrCode
+                |> Element.html
+
+        Err _ ->
+            Element.none
 
 
 iframe : { width : Int, height : Int } -> String -> Html.Html msg
