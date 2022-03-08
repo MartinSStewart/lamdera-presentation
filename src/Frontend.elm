@@ -6,6 +6,7 @@ import Browser.Events
 import Browser.Navigation
 import Element exposing (Element)
 import Element.Background
+import Element.Border
 import Element.Font
 import Element.Input
 import Element.Region
@@ -79,6 +80,9 @@ slides isPresenter participantCount windowSize =
 
         secondaryFontSize =
             Element.Font.size (ifMobile 18 24)
+
+        title text =
+            Element.paragraph [ titleFontSize, Element.Region.heading 1 ] [ Element.text text ]
     in
     [ Element.el
         [ Element.width Element.fill
@@ -104,7 +108,7 @@ slides isPresenter participantCount windowSize =
               )
                 |> Element.below
             ]
-            [ Element.el [ titleFontSize ] (Element.text "Hobby scale: making web apps with minimal fuss")
+            [ title "Hobby scale: making web apps with minimal fuss"
             , if isPresenter then
                 Element.column
                     [ Element.spacing 8, Element.centerX ]
@@ -118,8 +122,14 @@ slides isPresenter participantCount windowSize =
             ]
         )
     , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ title "Quick disclaimer"
+        , Element.text "• I'm going to show off a tool called Lamdera."
+        , Element.text "• I don't have any financial ties but I am friends with the creator of it"
+        ]
+    , Element.column
         [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
-        [ Element.el [ Element.centerX ] (Element.text "A little about me:")
+        [ title "A little about me:"
         , Element.text "I like making web apps in my free time"
         ]
     , Element.column
@@ -138,7 +148,7 @@ slides isPresenter participantCount windowSize =
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8 ]
-        [ Element.paragraph [ titleFontSize ] [ Element.text "2 years ago I wouldn't have bothered making this app" ]
+        [ title "2 years ago I wouldn't have bothered making this app"
         , Element.column
             [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
             [ Element.text "• The business logic is simple"
@@ -147,7 +157,7 @@ slides isPresenter participantCount windowSize =
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
-        [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist" ]
+        [ title "Fullstack app checklist"
         , Element.column
             [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
             (List.map
@@ -162,7 +172,14 @@ slides isPresenter participantCount windowSize =
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
-        [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist (for Lamdera)" ]
+        [ title "2 years ago I started using a tool called Lamdera"
+        , Element.paragraph [] [ Element.text "• Developed by Mario Rogic" ]
+        , Element.paragraph [] [ Element.text "• Opinionated platform for creating and hosting full stack web apps" ]
+        , Element.paragraph [] [ Element.text "• Apps are programmed using the Elm language" ]
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
+        [ title "Fullstack app checklist (for Lamdera)"
         , Element.column
             [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
             (List.map
@@ -183,7 +200,27 @@ slides isPresenter participantCount windowSize =
                 checklist
             )
         ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
+        [ title "What does this look like in practice?"
+        , Element.paragraph [] [ Element.text "1. ", code "lamdera init" ]
+        , Element.paragraph [] [ Element.text "2. ", code "lamdera live" ]
+        , Element.paragraph [] [ Element.text "3. Write the business logic for the frontend and backend" ]
+        , Element.paragraph [] [ Element.text "4. Go to the lamdera dashboard to create an app and give it name" ]
+        , Element.paragraph [] [ Element.text "5. ", code "lamdera deploy", Element.text " (repeat if you make more changes)" ]
+        ]
     ]
+
+
+code : String -> Element msg
+code text =
+    Element.el
+        [ Element.Font.family [ Element.Font.monospace ]
+        , Element.Background.color (Element.rgb 0.92 0.92 0.92)
+        , Element.Border.rounded 4
+        , Element.paddingEach { left = 4, right = 4, top = 2, bottom = 2 }
+        ]
+        (Element.text text)
 
 
 checklist : List ( Bool, String )
@@ -391,8 +428,17 @@ view model =
                         [ Element.width Element.fill
                         , Element.height Element.fill
                         ]
-                        [ List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize)
-                            |> Maybe.withDefault Element.none
+                        [ case List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize) of
+                            Just slide ->
+                                Element.el
+                                    [ Element.Region.mainContent
+                                    , Element.width Element.fill
+                                    , Element.height Element.fill
+                                    ]
+                                    slide
+
+                            Nothing ->
+                                Element.none
                         , Element.row
                             [ Element.centerX
                             , Element.width <| Element.maximum 800 Element.fill
