@@ -77,16 +77,7 @@ updateFromFrontend sessionId clientId msg model =
                         max model.latestSlide slide
                 in
                 ( { model | latestSlide = newLatestSlide }
-                , Set.toList model.participants
-                    |> List.filterMap
-                        (\( _, clientId_ ) ->
-                            if clientId_ == clientId then
-                                Nothing
-
-                            else
-                                Lamdera.sendToFrontend clientId (ChangeSlideNotification slide) |> Just
-                        )
-                    |> Cmd.batch
+                , Lamdera.broadcast (ChangeSlideNotification slide)
                 )
 
             else

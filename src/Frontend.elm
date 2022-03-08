@@ -5,7 +5,10 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation
 import Element exposing (Element)
+import Element.Background
 import Element.Font
+import Element.Input
+import Element.Region
 import Env
 import Html
 import Html.Attributes as Attr
@@ -61,16 +64,22 @@ init url key =
     )
 
 
-titleFontSize =
-    Element.Font.size 32
-
-
-secondaryFontSize =
-    Element.Font.size 24
-
-
 slides : Bool -> Int -> Size -> List (Element msg)
 slides isPresenter participantCount windowSize =
+    let
+        ifMobile ifTrue ifFalse =
+            if windowSize.width < 1000 then
+                ifTrue
+
+            else
+                ifFalse
+
+        titleFontSize =
+            Element.Font.size (ifMobile 24 32)
+
+        secondaryFontSize =
+            Element.Font.size (ifMobile 18 24)
+    in
     [ Element.el
         [ Element.width Element.fill
         , Element.height Element.fill
@@ -115,9 +124,14 @@ slides isPresenter participantCount windowSize =
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
-        [ Element.paragraph [ titleFontSize, Element.Font.center ] [ Element.text "Here's an app where you can fight over which color is the best" ]
+        [ ifMobile
+            Element.none
+            (Element.paragraph
+                [ titleFontSize, Element.Font.center ]
+                [ Element.text "Here's an app where you can fight over which color is the best" ]
+            )
         , iframe
-            { width = windowSize.width - 500, height = windowSize.height - 160 }
+            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 160 }
             "https://the-best-color.lamdera.app"
             |> Element.html
             |> Element.el [ Element.centerX ]
@@ -132,28 +146,39 @@ slides isPresenter participantCount windowSize =
             ]
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8 ]
-        [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist" ]
-        , Element.column
-            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
-            (List.map (\( _, text ) -> Element.text ("☐  " ++ text)) checklist)
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8 ]
+        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
         [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist" ]
         , Element.column
             [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
             (List.map
+                (\( _, text ) ->
+                    Element.row [ Element.spacing 12 ]
+                        [ Element.el [ Element.alignTop ] (Element.text "☐")
+                        , Element.paragraph [] [ Element.text text ]
+                        ]
+                )
+                checklist
+            )
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
+        [ Element.paragraph [ titleFontSize ] [ Element.text "Fullstack app checklist (for Lamdera)" ]
+        , Element.column
+            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
+            (List.map
                 (\( handledByLamdera, text ) ->
-                    Element.text
-                        ((if handledByLamdera then
-                            "☑  "
+                    Element.row [ Element.spacing 12 ]
+                        [ Element.el [ Element.alignTop ]
+                            (Element.text
+                                (if handledByLamdera then
+                                    "☑"
 
-                          else
-                            "☐  "
-                         )
-                            ++ text
-                        )
+                                 else
+                                    "☐"
+                                )
+                            )
+                        , Element.paragraph [] [ Element.text text ]
+                        ]
                 )
                 checklist
             )
@@ -249,6 +274,32 @@ update msg model =
             , Cmd.none
             )
 
+        PressedGotoPreviousSlide ->
+            ( case model of
+                Loading _ _ _ ->
+                    model
+
+                Presenter _ ->
+                    model
+
+                Viewer viewer ->
+                    Viewer { viewer | currentSlide = viewer.currentSlide - 1 |> max 0 }
+            , Cmd.none
+            )
+
+        PressedGotoNextSlide ->
+            ( case model of
+                Loading _ _ _ ->
+                    model
+
+                Presenter _ ->
+                    model
+
+                Viewer viewer ->
+                    Viewer { viewer | currentSlide = viewer.currentSlide + 1 |> min viewer.latestSlide }
+            , Cmd.none
+            )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -279,7 +330,18 @@ updateFromBackend msg model =
         ChangeSlideNotification slide ->
             case model of
                 Viewer viewer ->
-                    ( Viewer { viewer | latestSlide = slide }, Cmd.none )
+                    ( Viewer
+                        { viewer
+                            | currentSlide =
+                                if viewer.currentSlide == viewer.latestSlide then
+                                    slide
+
+                                else
+                                    viewer.currentSlide
+                            , latestSlide = slide
+                        }
+                    , Cmd.none
+                    )
 
                 _ ->
                     ( model, Cmd.none )
@@ -325,8 +387,47 @@ view model =
                         |> Maybe.withDefault Element.none
 
                 Viewer viewer ->
-                    List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize)
-                        |> Maybe.withDefault Element.none
+                    Element.column
+                        [ Element.width Element.fill
+                        , Element.height Element.fill
+                        ]
+                        [ List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize)
+                            |> Maybe.withDefault Element.none
+                        , Element.row
+                            [ Element.centerX
+                            , Element.width <| Element.maximum 800 Element.fill
+                            , Element.Region.navigation
+                            ]
+                            [ Element.Input.button
+                                [ Element.padding 16
+                                , Element.width Element.fill
+                                , Element.Background.color
+                                    (if viewer.currentSlide > 0 then
+                                        Element.rgb 0.6 0.6 0.6
+
+                                     else
+                                        Element.rgb 0.9 0.9 0.9
+                                    )
+                                ]
+                                { onPress = Just PressedGotoPreviousSlide
+                                , label = Element.el [ Element.centerX ] (Element.text "← Previous")
+                                }
+                            , Element.Input.button
+                                [ Element.padding 16
+                                , Element.width Element.fill
+                                , Element.Background.color
+                                    (if viewer.currentSlide < viewer.latestSlide then
+                                        Element.rgb 0.6 0.6 0.6
+
+                                     else
+                                        Element.rgb 0.9 0.9 0.9
+                                    )
+                                ]
+                                { onPress = Just PressedGotoNextSlide
+                                , label = Element.el [ Element.centerX ] (Element.text "Next →")
+                                }
+                            ]
+                        ]
             )
         ]
     }
