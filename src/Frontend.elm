@@ -18,6 +18,7 @@ import Lamdera
 import List.Extra as List
 import QRCode
 import Svg.Attributes
+import SyntaxHighlight
 import Task
 import Types exposing (..)
 import Url
@@ -68,8 +69,11 @@ init url key =
 slides : Bool -> Int -> Size -> List (Element msg)
 slides isPresenter participantCount windowSize =
     let
+        isMobile =
+            windowSize.width < 1000
+
         ifMobile ifTrue ifFalse =
-            if windowSize.width < 1000 then
+            if isMobile then
                 ifTrue
 
             else
@@ -124,12 +128,15 @@ slides isPresenter participantCount windowSize =
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
         [ title "Quick disclaimer"
-        , Element.text "• I'm going to show off a tool called Lamdera."
-        , Element.text "• I don't have any financial ties but I am friends with the creator of it"
+        , bulletList
+            isMobile
+            [ Element.text "I'm going to show off a tool called Lamdera."
+            , Element.text "I don't have any financial ties but I am friends with the creator of it"
+            ]
         ]
     , Element.column
         [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
-        [ title "A little about me:"
+        [ Element.el [ Element.centerX ] (title "A little about me:")
         , Element.text "I like making web apps in my free time"
         ]
     , Element.column
@@ -138,21 +145,19 @@ slides isPresenter participantCount windowSize =
             Element.none
             (Element.paragraph
                 [ titleFontSize, Element.Font.center ]
-                [ Element.text "Here's an app where you can fight over which color is the best" ]
+                [ Element.text "Fight over which color is the best!" ]
             )
         , iframe
-            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 160 }
+            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
             "https://the-best-color.lamdera.app"
-            |> Element.html
-            |> Element.el [ Element.centerX ]
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8 ]
         [ title "2 years ago I wouldn't have bothered making this app"
-        , Element.column
-            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
-            [ Element.text "• The business logic is simple"
-            , Element.text "• But a lot of infrastructure work is still needed"
+        , bulletList
+            isMobile
+            [ Element.text "The business logic is simple"
+            , Element.text "But a lot of infrastructure work is still needed"
             ]
         ]
     , Element.column
@@ -173,9 +178,12 @@ slides isPresenter participantCount windowSize =
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
         [ title "2 years ago I started using a tool called Lamdera"
-        , Element.paragraph [] [ Element.text "• Developed by Mario Rogic" ]
-        , Element.paragraph [] [ Element.text "• Opinionated platform for creating and hosting full stack web apps" ]
-        , Element.paragraph [] [ Element.text "• Apps are programmed using the Elm language" ]
+        , bulletList
+            isMobile
+            [ Element.text "Developed by Mario Rogic"
+            , Element.text "Opinionated platform for creating and hosting full stack web apps"
+            , Element.text "Apps are programmed using the Elm language"
+            ]
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
@@ -209,7 +217,115 @@ slides isPresenter participantCount windowSize =
         , Element.paragraph [] [ Element.text "4. Go to the lamdera dashboard to create an app and give it name" ]
         , Element.paragraph [] [ Element.text "5. ", code "lamdera deploy", Element.text " (repeat if you make more changes)" ]
         ]
+    , Element.el
+        [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront, Element.centerX ]
+        (case SyntaxHighlight.elm bestColorBackend of
+            Ok hCode ->
+                SyntaxHighlight.toInlineHtml hCode
+                    |> Element.html
+                    |> Element.el
+                        [ Element.padding 8
+                        , Element.Background.color (Element.rgb255 40 44 52)
+                        , Element.Font.size (ifMobile 14 16)
+                        ]
+
+            Err _ ->
+                Element.none
+        )
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 16, Element.Font.center ]
+        [ title "So Lamdera makes it quick to make simple stuff, but what about more complicated apps?"
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ ifMobile
+            Element.none
+            (Element.paragraph
+                [ titleFontSize, Element.Font.center ]
+                [ Element.text "Draw ascii art with friends!" ]
+            )
+        , iframe
+            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 140 }
+            Env.asciiCollabLink
+        ]
     ]
+
+
+bulletList : Bool -> List (Element msg) -> Element msg
+bulletList isMobile elements =
+    Element.column
+        [ (if isMobile then
+            18
+
+           else
+            24
+          )
+            |> Element.Font.size
+        , Element.spacing 16
+        , Element.padding 12
+        ]
+        (List.map
+            (\item ->
+                Element.row
+                    [ Element.spacing 12 ]
+                    [ Element.el
+                        [ Element.Background.color (Element.rgb 0 0 0)
+                        , Element.width (Element.px 8)
+                        , Element.height (Element.px 8)
+                        , Element.Border.rounded 99
+                        , Element.alignTop
+                        , Element.moveDown
+                            (if isMobile then
+                                4
+
+                             else
+                                8
+                            )
+                        ]
+                        Element.none
+                    , Element.paragraph [] [ item ]
+                    ]
+            )
+            elements
+        )
+
+
+bestColorBackend =
+    """module Backend exposing (app)
+
+import ColorIndex
+import Lamdera exposing (ClientId, SessionId)
+import Types exposing (..)
+
+app =
+    Lamdera.backend
+        { init = ( { currentColor = ColorIndex.Blue, changeCount = 0, lastChangedBy = Nothing }, Cmd.none )
+        , update = \\_ model -> ( model, Cmd.none )
+        , updateFromFrontend = updateFromFrontend
+        , subscriptions = \\_ -> Sub.none
+        }
+
+updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+updateFromFrontend sessionId clientId msg model =
+    case msg of
+        ClientConnected ->
+            ( model
+            , Lamdera.sendToFrontend clientId (UpdateColor model.currentColor model.changeCount)
+            )
+
+        ColorChosen color ->
+            let
+                changeCount =
+                    if model.lastChangedBy == Just sessionId then
+                        model.changeCount
+
+                    else
+                        model.changeCount + 1
+            in
+            ( { currentColor = color, lastChangedBy = Just sessionId, changeCount = changeCount }
+            , Lamdera.broadcast (UpdateColor color changeCount)
+            )
+"""
 
 
 code : String -> Element msg
@@ -218,7 +334,7 @@ code text =
         [ Element.Font.family [ Element.Font.monospace ]
         , Element.Background.color (Element.rgb 0.92 0.92 0.92)
         , Element.Border.rounded 4
-        , Element.paddingEach { left = 4, right = 4, top = 2, bottom = 2 }
+        , Element.paddingEach { left = 4, right = 4, top = 2, bottom = 0 }
         ]
         (Element.text text)
 
@@ -227,7 +343,7 @@ checklist : List ( Bool, String )
 checklist =
     [ ( True, "Set up database" )
     , ( True, "Write code to query/write to database" )
-    , ( True, "Write code to handle sending data to/from frontend/backend (raw http? graphQL? websockets?)" )
+    , ( True, "Write code to handle sending data to/from frontend/backend" )
     , ( True, "Setup hot reloading for local development" )
     , ( True, "Setup running the backend for local development" )
     , ( True, "Write deploy scripts for database, frontend, and backend" )
@@ -443,17 +559,17 @@ view model =
                             [ Element.centerX
                             , Element.width <| Element.maximum 800 Element.fill
                             , Element.Region.navigation
+                            , Element.spacing 4
                             ]
                             [ Element.Input.button
                                 [ Element.padding 16
                                 , Element.width Element.fill
-                                , Element.Background.color
-                                    (if viewer.currentSlide > 0 then
-                                        Element.rgb 0.6 0.6 0.6
+                                , Element.Background.color (Element.rgb 0.6 0.6 0.6)
+                                , if viewer.currentSlide > 0 then
+                                    Element.alpha 1
 
-                                     else
-                                        Element.rgb 0.9 0.9 0.9
-                                    )
+                                  else
+                                    Element.alpha 0.5
                                 ]
                                 { onPress = Just PressedGotoPreviousSlide
                                 , label = Element.el [ Element.centerX ] (Element.text "← Previous")
@@ -461,13 +577,12 @@ view model =
                             , Element.Input.button
                                 [ Element.padding 16
                                 , Element.width Element.fill
-                                , Element.Background.color
-                                    (if viewer.currentSlide < viewer.latestSlide then
-                                        Element.rgb 0.6 0.6 0.6
+                                , Element.Background.color (Element.rgb 0.6 0.6 0.6)
+                                , if viewer.currentSlide < viewer.latestSlide then
+                                    Element.alpha 1
 
-                                     else
-                                        Element.rgb 0.9 0.9 0.9
-                                    )
+                                  else
+                                    Element.alpha 0.5
                                 ]
                                 { onPress = Just PressedGotoNextSlide
                                 , label = Element.el [ Element.centerX ] (Element.text "Next →")
@@ -493,7 +608,7 @@ qrCodeElement =
             Element.none
 
 
-iframe : { width : Int, height : Int } -> String -> Html.Html msg
+iframe : { width : Int, height : Int } -> String -> Element msg
 iframe { width, height } src =
     Html.iframe
         [ Attr.src src
@@ -502,3 +617,5 @@ iframe { width, height } src =
         , Attr.style "border" "0"
         ]
         []
+        |> Element.html
+        |> Element.el [ Element.centerX, Element.Border.shadow { offset = ( 0, 2 ), blur = 8, size = 0, color = Element.rgba 0 0 0 0.4 } ]

@@ -7,3 +7,7 @@ password =
 
 domain =
     "localhost:8000"
+
+
+asciiCollabLink =
+    "https://ascii-collab.app/?x=-383&y=-117"
