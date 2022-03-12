@@ -152,8 +152,32 @@ slides isPresenter participantCount windowSize =
             "https://the-best-color.lamdera.app"
         ]
     , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ ifMobile
+            Element.none
+            (Element.paragraph
+                [ titleFontSize, Element.Font.center ]
+                [ Element.text "Question and answer app" ]
+            )
+        , iframe
+            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
+            Env.questionAndAnswerLink
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ ifMobile
+            Element.none
+            (Element.paragraph
+                [ titleFontSize, Element.Font.center ]
+                [ Element.text "Favorite moment this month?" ]
+            )
+        , iframe
+            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
+            Env.momentOfTheMonthLink
+        ]
+    , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8 ]
-        [ title "2 years ago I wouldn't have bothered making this app"
+        [ title "2 years ago I wouldn't have bothered making these apps"
         , bulletList
             isMobile
             [ Element.text "The business logic is simple"
@@ -268,6 +292,33 @@ slides isPresenter participantCount windowSize =
             , Element.text "If you are willing to learn Elm I think it's worth trying!"
             , Element.text "It's well suited for complicated apps but it's not well suited for memory/CPU heavy apps"
             ]
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ title "Links"
+        , [ { website = "https://the-best-color.lamdera.app"
+            , github = "https://github.com/MartinSStewart/best-color"
+            }
+          , { website = "https://question-and-answer.app/"
+            , github = "https://github.com/MartinSStewart/elm-qna"
+            }
+          , { website = "https://moment-of-the-month.lamdera.app/"
+            , github = "https://github.com/MartinSStewart/elm-moment-of-the-month"
+            }
+          , { website = "https://ascii-collab.app/"
+            , github = "https://github.com/MartinSStewart/ascii-collab"
+            }
+          , { website = "https://meetdown.app/"
+            , github = "https://github.com/MartinSStewart/meetdown"
+            }
+          ]
+            |> List.map
+                (\{ website, github } ->
+                    Element.newTabLink
+                        [ Element.Font.size 16 ]
+                        { url = website, label = Element.paragraph [] [ Element.text website ] }
+                )
+            |> Element.column [ Element.spacing 16 ]
         ]
     ]
 
