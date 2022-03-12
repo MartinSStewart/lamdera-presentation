@@ -12,11 +12,12 @@ import Element.Input
 import Element.Region
 import Env
 import Html
-import Html.Attributes as Attr
+import Html.Attributes
 import Keyboard
 import Lamdera
 import List.Extra as List
 import QRCode
+import Svg
 import Svg.Attributes
 import SyntaxHighlight
 import Task
@@ -235,14 +236,17 @@ slides isPresenter participantCount windowSize =
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
         [ title "What does this look like in practice?"
-        , Element.paragraph [] [ Element.text "1. ", code "lamdera init" ]
-        , Element.paragraph [] [ Element.text "2. ", code "lamdera live" ]
-        , Element.paragraph [] [ Element.text "3. Write the business logic for the frontend and backend" ]
-        , Element.paragraph [] [ Element.text "4. Go to the lamdera dashboard to create an app and give it name" ]
-        , Element.paragraph [] [ Element.text "5. ", code "lamdera deploy", Element.text " (repeat if you make more changes)" ]
+        , numberedList
+            isMobile
+            [ code "lamdera init"
+            , code "lamdera live"
+            , Element.text "Write the business logic for the frontend and backend"
+            , Element.text "Go to the lamdera dashboard to create an app and give it name"
+            , code "lamdera deploy"
+            ]
         ]
     , Element.el
-        [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront, Element.centerX ]
+        [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront, Element.centerX, Element.centerY ]
         (case SyntaxHighlight.elm bestColorBackend of
             Ok hCode ->
                 SyntaxHighlight.toInlineHtml hCode
@@ -285,7 +289,7 @@ slides isPresenter participantCount windowSize =
             "https://meetdown.app/"
         ]
     , Element.column
-        []
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
         [ title "In conclusion..."
         , bulletList isMobile
             [ Element.text "Lamdera is cool!"
@@ -314,13 +318,51 @@ slides isPresenter participantCount windowSize =
           ]
             |> List.map
                 (\{ website, github } ->
-                    Element.newTabLink
-                        [ Element.Font.size 16 ]
-                        { url = website, label = Element.paragraph [] [ Element.text website ] }
+                    Element.column
+                        [ Element.spacing 8 ]
+                        [ Element.row
+                            [ Element.spacing 8 ]
+                            [ Element.text "🔗"
+                            , Element.newTabLink
+                                [ secondaryFontSize
+                                , Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                , Element.Font.underline
+                                ]
+                                { url = website, label = Element.paragraph [] [ Element.text website ] }
+                            ]
+                        , Element.row
+                            [ Element.spacing 8 ]
+                            [ githubLogo
+                            , Element.newTabLink
+                                [ secondaryFontSize
+                                , Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                , Element.Font.underline
+                                ]
+                                { url = website, label = Element.paragraph [] [ Element.text github ] }
+                            ]
+                        ]
                 )
             |> Element.column [ Element.spacing 16 ]
         ]
     ]
+
+
+githubLogo : Element msg
+githubLogo =
+    Svg.svg
+        [ Svg.Attributes.height "18"
+        , Svg.Attributes.viewBox "0 0 16 16"
+        , Svg.Attributes.version "1.1"
+        , Svg.Attributes.width "18"
+        ]
+        [ Svg.path
+            [ Svg.Attributes.fillRule "evenodd"
+            , Svg.Attributes.d "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+            ]
+            []
+        ]
+        |> Element.html
+        |> Element.el []
 
 
 bulletList : Bool -> List (Element msg) -> Element msg
@@ -362,22 +404,46 @@ bulletList isMobile elements =
         )
 
 
+numberedList : Bool -> List (Element msg) -> Element msg
+numberedList isMobile elements =
+    Element.column
+        [ (if isMobile then
+            18
+
+           else
+            24
+          )
+            |> Element.Font.size
+        , Element.spacing 16
+        , Element.padding 12
+        ]
+        (List.indexedMap
+            (\index item ->
+                Element.row
+                    [ Element.spacing 12 ]
+                    [ Element.text (String.fromInt (index + 1) ++ ". ")
+                    , Element.paragraph [] [ item ]
+                    ]
+            )
+            elements
+        )
+
+
 bestColorBackend =
     """module Backend exposing (app)
 
-import ColorIndex
+import ColorIndex exposing (ColorIndex(..))
 import Lamdera exposing (ClientId, SessionId)
 import Types exposing (..)
 
 app =
     Lamdera.backend
-        { init = ( { currentColor = ColorIndex.Blue, changeCount = 0, lastChangedBy = Nothing }, Cmd.none )
+        { init = ( { currentColor = Blue, changeCount = 0, lastChangedBy = Nothing }, Cmd.none )
         , update = \\_ model -> ( model, Cmd.none )
         , updateFromFrontend = updateFromFrontend
         , subscriptions = \\_ -> Sub.none
         }
 
-updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
         ClientConnected ->
@@ -683,10 +749,10 @@ qrCodeElement =
 iframe : { width : Int, height : Int } -> String -> Element msg
 iframe { width, height } src =
     Html.iframe
-        [ Attr.src src
-        , Attr.width width
-        , Attr.height height
-        , Attr.style "border" "0"
+        [ Html.Attributes.src src
+        , Html.Attributes.width width
+        , Html.Attributes.height height
+        , Html.Attributes.style "border" "0"
         ]
         []
         |> Element.html
