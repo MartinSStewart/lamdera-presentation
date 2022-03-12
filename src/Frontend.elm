@@ -303,16 +303,16 @@ slides isPresenter participantCount windowSize =
         , [ { website = "https://the-best-color.lamdera.app"
             , github = "https://github.com/MartinSStewart/best-color"
             }
-          , { website = "https://question-and-answer.app/"
+          , { website = "https://question-and-answer.app"
             , github = "https://github.com/MartinSStewart/elm-qna"
             }
-          , { website = "https://moment-of-the-month.lamdera.app/"
+          , { website = "https://moment-of-the-month.lamdera.app"
             , github = "https://github.com/MartinSStewart/elm-moment-of-the-month"
             }
-          , { website = "https://ascii-collab.app/"
+          , { website = "https://ascii-collab.app"
             , github = "https://github.com/MartinSStewart/ascii-collab"
             }
-          , { website = "https://meetdown.app/"
+          , { website = "https://meetdown.app"
             , github = "https://github.com/MartinSStewart/meetdown"
             }
           ]
@@ -328,7 +328,7 @@ slides isPresenter participantCount windowSize =
                                 , Element.Font.color (Element.rgb 0.3 0.4 0.8)
                                 , Element.Font.underline
                                 ]
-                                { url = website, label = Element.paragraph [] [ Element.text website ] }
+                                { url = website, label = Element.paragraph [] [ Element.text (removeHttps website) ] }
                             ]
                         , Element.row
                             [ Element.spacing 8 ]
@@ -338,13 +338,21 @@ slides isPresenter participantCount windowSize =
                                 , Element.Font.color (Element.rgb 0.3 0.4 0.8)
                                 , Element.Font.underline
                                 ]
-                                { url = website, label = Element.paragraph [] [ Element.text github ] }
+                                { url = website, label = Element.paragraph [] [ Element.text (removeHttps github) ] }
                             ]
                         ]
                 )
             |> Element.column [ Element.spacing 16 ]
         ]
     ]
+
+
+removeHttps url =
+    if String.startsWith "https://" url then
+        String.dropLeft (String.length "https://") url
+
+    else
+        url
 
 
 githubLogo : Element msg
@@ -421,7 +429,7 @@ numberedList isMobile elements =
             (\index item ->
                 Element.row
                     [ Element.spacing 12 ]
-                    [ Element.text (String.fromInt (index + 1) ++ ". ")
+                    [ Element.el [ Element.alignTop ] (Element.text (String.fromInt (index + 1) ++ ". "))
                     , Element.paragraph [] [ item ]
                     ]
             )
