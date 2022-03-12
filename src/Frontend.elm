@@ -248,6 +248,27 @@ slides isPresenter participantCount windowSize =
             { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 140 }
             Env.asciiCollabLink
         ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ ifMobile
+            Element.none
+            (Element.paragraph
+                [ titleFontSize, Element.Font.center ]
+                [ Element.text "meetup.com but free!" ]
+            )
+        , iframe
+            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 140 }
+            "https://meetdown.app/"
+        ]
+    , Element.column
+        []
+        [ title "In conclusion..."
+        , bulletList isMobile
+            [ Element.text "Lamdera is cool!"
+            , Element.text "If you are willing to learn Elm I think it's worth trying!"
+            , Element.text "It's well suited for complicated apps but it's not well suited for memory/CPU heavy apps"
+            ]
+        ]
     ]
 
 
