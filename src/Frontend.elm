@@ -290,6 +290,24 @@ slides isPresenter participantCount windowSize =
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ ifMobile
+            Element.none
+            (Element.paragraph
+                [ titleFontSize, Element.Font.center ]
+                [ Element.text "Realia app" ]
+            )
+        , Element.column
+            [ Element.spacing 16 ]
+            [ Element.image [ Element.width Element.fill ] { src = "realia-desktop.png", description = "Desktop screenshot" }
+            , Element.row
+                []
+                [ Element.image [ Element.width Element.fill ] { src = "realia-homepage.png", description = "Mobile homepage screenshot" }
+                , Element.image [ Element.width Element.fill ] { src = "realia-mappage.png", description = "Mobile map page screenshot" }
+                ]
+            ]
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16 ]
         [ title "In conclusion..."
         , bulletList isMobile
             [ Element.text "Lamdera is cool!"
