@@ -127,7 +127,7 @@ slides isPresenter participantCount windowSize =
             ]
         )
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        columnHelper
         [ title "Quick disclaimer"
         , bulletList
             isMobile
@@ -138,7 +138,7 @@ slides isPresenter participantCount windowSize =
     , Element.column
         [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
         [ Element.el [ Element.centerX ] (title "A little about me:")
-        , Element.text "As a hobby, I made web apps"
+        , Element.text "As a hobby, I make web apps"
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
@@ -162,7 +162,12 @@ slides isPresenter participantCount windowSize =
             )
         , iframe
             { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
-            Env.questionAndAnswerLink
+            (if isPresenter then
+                Env.questionAndAnswerHostLink
+
+             else
+                Env.questionAndAnswerLink
+            )
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
@@ -177,7 +182,7 @@ slides isPresenter participantCount windowSize =
             Env.momentOfTheMonthLink
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8 ]
+        columnHelper
         [ title "2 years ago I wouldn't have bothered making these apps"
         , bulletList
             isMobile
@@ -188,7 +193,7 @@ slides isPresenter participantCount windowSize =
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
-        [ title "Fullstack app checklist"
+        [ title "Web app checklist"
         , Element.column
             [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
             (List.map
@@ -202,7 +207,7 @@ slides isPresenter participantCount windowSize =
             )
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
+        columnHelper
         [ title "2 years ago I started using a tool called Lamdera"
         , bulletList
             isMobile
@@ -212,8 +217,8 @@ slides isPresenter participantCount windowSize =
             ]
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
-        [ title "Fullstack app checklist (for Lamdera)"
+        columnHelper
+        [ title "Web app checklist (for Lamdera)"
         , Element.column
             [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
             (List.map
@@ -233,7 +238,7 @@ slides isPresenter participantCount windowSize =
             )
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
+        columnHelper
         [ title "What does this look like in practice?"
         , numberedList
             isMobile
@@ -341,13 +346,13 @@ slides isPresenter participantCount windowSize =
                 Element.none
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
+        columnHelper
         [ title "And more!"
         , bulletList isMobile
-            [ Element.text "Credits for 2020"
+            [ Element.text "New years eve present for friends"
             , Element.text "\"The sheep game\""
-            , Element.text "Reusing ascii-collab as a get-well-soon card"
-            , Element.text "Also reusing ascii-collab as a goodbye card"
+            , Element.text "Reusing ascii-collab for a get-well-soon card"
+            , Element.text "Reusing ascii-collab for a goodbye card"
             , Element.text "This presentation!"
             , Element.row []
                 [ Element.text "Another presentation! → "
@@ -363,7 +368,7 @@ slides isPresenter participantCount windowSize =
             ]
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
+        columnHelper
         [ title "Tradeoffs"
         , bulletList isMobile
             [ Element.text "Elm only"
@@ -372,7 +377,7 @@ slides isPresenter participantCount windowSize =
             ]
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
+        columnHelper
         [ title "In conclusion..."
         , bulletList isMobile
             [ Element.text "Lamdera is cool!"
@@ -381,7 +386,7 @@ slides isPresenter participantCount windowSize =
             ]
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        columnHelper
         [ title "Links"
         , [ { youtube = Nothing
             , website = Just "https://lamdera.com"
@@ -470,6 +475,10 @@ slides isPresenter participantCount windowSize =
             |> Element.column [ Element.spacing 24 ]
         ]
     ]
+
+
+columnHelper =
+    [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
 
 
 youtubeIcon =
@@ -572,7 +581,13 @@ bulletList isMobile elements =
             24
           )
             |> Element.Font.size
-        , Element.spacing 16
+        , Element.spacing
+            (if isMobile then
+                8
+
+             else
+                16
+            )
         , Element.padding 12
         ]
         (List.map
@@ -682,10 +697,9 @@ checklist : List ( Bool, String )
 checklist =
     [ ( True, "Set up database" )
     , ( True, "Write code to query/write to database" )
-    , ( True, "Write code to handle sending data to/from frontend/backend" )
-    , ( True, "Setup hot reloading for local development" )
-    , ( True, "Setup running the backend for local development" )
-    , ( True, "Write deploy scripts for database, frontend, and backend" )
+    , ( True, "Handle sending data to/from frontend/backend" )
+    , ( True, "Setup hot reloading and running backend locally" )
+    , ( True, "Deploy scripts for database, frontend, and backend" )
     , ( True, "Setup server hosting" )
     , ( False, "Write backend business logic" )
     , ( False, "Write frontend business logic" )
@@ -864,7 +878,7 @@ view model =
     { title = ""
     , body =
         [ Element.layout
-            []
+            [ Element.height Element.fill ]
             (case model of
                 Loading _ _ _ ->
                     Element.none
@@ -877,6 +891,7 @@ view model =
                     Element.column
                         [ Element.width Element.fill
                         , Element.height Element.fill
+                        , Element.spacing 4
                         ]
                         [ case List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize) of
                             Just slide ->
@@ -894,6 +909,7 @@ view model =
                             , Element.width <| Element.maximum 800 Element.fill
                             , Element.Region.navigation
                             , Element.spacing 4
+                            , Element.alignBottom
                             ]
                             [ Element.Input.button
                                 [ Element.padding 16
@@ -932,8 +948,8 @@ qrCodeElement =
     case QRCode.fromString Env.domain of
         Ok qrCode ->
             QRCode.toSvg
-                [ Svg.Attributes.width "200px"
-                , Svg.Attributes.height "200px"
+                [ Svg.Attributes.width "250px"
+                , Svg.Attributes.height "250px"
                 ]
                 qrCode
                 |> Element.html
