@@ -1,1 +1,1 @@
-goto-presentation
+A presentation about Lamdera - written in Lamdera!

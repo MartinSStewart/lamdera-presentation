@@ -1,4 +1,4 @@
-module Frontend exposing (..)
+module Frontend exposing (app)
 
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -138,7 +138,7 @@ slides isPresenter participantCount windowSize =
     , Element.column
         [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
         [ Element.el [ Element.centerX ] (title "A little about me:")
-        , Element.text "I like making web apps in my free time"
+        , Element.text "As a hobby, I made web apps"
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
@@ -183,6 +183,7 @@ slides isPresenter participantCount windowSize =
             isMobile
             [ Element.text "The business logic is simple"
             , Element.text "But a lot of infrastructure work is still needed"
+            , Element.text "For a job I might tolerate that, but not in my free time!"
             ]
         ]
     , Element.column
@@ -193,7 +194,7 @@ slides isPresenter participantCount windowSize =
             (List.map
                 (\( _, text ) ->
                     Element.row [ Element.spacing 12 ]
-                        [ Element.el [ Element.alignTop ] (Element.text "☐")
+                        [ Element.el [ Element.alignTop ] (checkbox isMobile False)
                         , Element.paragraph [] [ Element.text text ]
                         ]
                 )
@@ -219,13 +220,11 @@ slides isPresenter participantCount windowSize =
                 (\( handledByLamdera, text ) ->
                     Element.row [ Element.spacing 12 ]
                         [ Element.el [ Element.alignTop ]
-                            (Element.text
-                                (if handledByLamdera then
-                                    "☑"
+                            (if handledByLamdera then
+                                checkbox isMobile True
 
-                                 else
-                                    "☐"
-                                )
+                             else
+                                checkbox isMobile False
                             )
                         , Element.paragraph [] [ Element.text text ]
                         ]
@@ -246,10 +245,24 @@ slides isPresenter participantCount windowSize =
             ]
         ]
     , Element.el
-        [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront, Element.centerX, Element.centerY ]
-        (case SyntaxHighlight.elm bestColorBackend of
+        [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront
+        , Element.centerX
+        , Element.centerY
+        , ifMobile
+            Element.none
+            (Element.image
+                [ Element.width (Element.px 240)
+                , Element.alignRight
+                , Element.moveRight 80
+                , Element.moveUp 20
+                ]
+                { src = "best-color-files.png", description = "Best color files" }
+            )
+            |> Element.inFront
+        ]
+        (case bestColorBackend of
             Ok hCode ->
-                SyntaxHighlight.toInlineHtml hCode
+                Html.div [ Html.Attributes.style "white-space" "pre-wrap" ] [ SyntaxHighlight.toInlineHtml hCode ]
                     |> Element.html
                     |> Element.el
                         [ Element.padding 8
@@ -262,7 +275,7 @@ slides isPresenter participantCount windowSize =
         )
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 16, Element.Font.center ]
-        [ title "So Lamdera makes it quick to make simple stuff, but what about more complicated apps?"
+        [ title "So it's quick to make simple stuff, but what about more complicated use cases?"
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
@@ -289,80 +302,238 @@ slides isPresenter participantCount windowSize =
             "https://meetdown.app/"
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ Element.alignTop, Element.spacing 16, Element.padding 16, Element.width Element.fill ]
         [ ifMobile
             Element.none
             (Element.paragraph
-                [ titleFontSize, Element.Font.center ]
+                [ titleFontSize, Element.Font.center, Element.centerX ]
                 [ Element.text "Realia app" ]
             )
-        , Element.column
-            [ Element.spacing 16 ]
-            [ Element.image [ Element.width Element.fill ] { src = "realia-desktop.png", description = "Desktop screenshot" }
-            , Element.row
-                []
-                [ Element.image [ Element.width Element.fill ] { src = "realia-homepage.png", description = "Mobile homepage screenshot" }
-                , Element.image [ Element.width Element.fill ] { src = "realia-mappage.png", description = "Mobile map page screenshot" }
+        , if isMobile then
+            Element.column
+                [ Element.spacing 16 ]
+                [ Element.image [ Element.width Element.fill ] { src = "realia-desktop.png", description = "Desktop screenshot" }
+                , Element.row
+                    [ Element.spacing 16 ]
+                    [ Element.image [ Element.width Element.fill ] { src = "realia-homepage.png", description = "Mobile homepage screenshot" }
+                    , Element.image [ Element.width Element.fill ] { src = "realia-mappage.png", description = "Mobile map page screenshot" }
+                    ]
                 ]
+
+          else
+            Element.el
+                [ Element.width (Element.px 1320)
+                , Element.centerX
+                , Element.height Element.fill
+                , Element.image
+                    [ Element.width (Element.px 950), Element.moveDown 100 ]
+                    { src = "realia-desktop.png", description = "Desktop screenshot" }
+                    |> Element.inFront
+                , Element.image
+                    [ Element.width (Element.px 320), Element.moveRight 716 ]
+                    { src = "realia-homepage.png", description = "Mobile homepage screenshot" }
+                    |> Element.inFront
+                , Element.image
+                    [ Element.width (Element.px 320), Element.moveRight 1000, Element.moveDown 200 ]
+                    { src = "realia-mappage.png", description = "Mobile map page screenshot" }
+                    |> Element.inFront
+                ]
+                Element.none
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
+        [ title "And more!"
+        , bulletList isMobile
+            [ Element.text "Credits for 2020"
+            , Element.text "\"The sheep game\""
+            , Element.text "Reusing ascii-collab as a get-well-soon card"
+            , Element.text "Also reusing ascii-collab as a goodbye card"
+            , Element.text "This presentation!"
+            , Element.row []
+                [ Element.text "Another presentation! → "
+                , Element.link
+                    [ Element.Font.color (Element.rgb 0.3 0.4 0.8), Element.Font.underline ]
+                    { url = "https://www.youtube.com/watch?v=lw1E9sPbq28"
+                    , label = Element.text "https://www.youtube.com/watch?v=lw1E9sPbq28"
+                    }
+                ]
+            , Element.text "Translation editing app for work"
+            , Element.text "Discord bot"
+            , Element.text "Github bot"
             ]
         ]
     , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
+        [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
+        [ title "Tradeoffs"
+        , bulletList isMobile
+            [ Element.text "Elm only"
+            , Element.text "Limited CPU and memory resources (not web-scale)"
+            , Element.text "Vendor lock-in"
+            ]
+        ]
+    , Element.column
+        [ Element.centerX, Element.centerY, Element.spacing 16, Element.padding 16 ]
         [ title "In conclusion..."
         , bulletList isMobile
             [ Element.text "Lamdera is cool!"
-            , Element.text "If you are willing to learn Elm I think it's worth trying!"
-            , Element.text "It's well suited for complicated apps but it's not well suited for memory/CPU heavy apps"
+            , Element.text "It's not suitable for all web apps"
+            , Element.text "But when you can use it, it can save you a lot of effort"
             ]
         ]
     , Element.column
         [ Element.centerX, Element.centerY, Element.spacing 16 ]
         [ title "Links"
-        , [ { website = "https://the-best-color.lamdera.app"
-            , github = "https://github.com/MartinSStewart/best-color"
+        , [ { youtube = Nothing
+            , website = Just "https://lamdera.com"
+            , github = Nothing
             }
-          , { website = "https://question-and-answer.app"
-            , github = "https://github.com/MartinSStewart/elm-qna"
+          , { youtube = Nothing
+            , website = Just "https://the-best-color.lamdera.app"
+            , github = Just "https://github.com/MartinSStewart/best-color"
             }
-          , { website = "https://moment-of-the-month.lamdera.app"
-            , github = "https://github.com/MartinSStewart/elm-moment-of-the-month"
+          , { youtube = Nothing
+            , website = Just "https://question-and-answer.app"
+            , github = Just "https://github.com/MartinSStewart/elm-qna"
             }
-          , { website = "https://ascii-collab.app"
-            , github = "https://github.com/MartinSStewart/ascii-collab"
+          , { youtube = Nothing
+            , website = Just "https://moment-of-the-month.lamdera.app"
+            , github = Just "https://github.com/MartinSStewart/elm-moment-of-the-month"
             }
-          , { website = "https://meetdown.app"
-            , github = "https://github.com/MartinSStewart/meetdown"
+          , { youtube = Nothing
+            , website = Just "https://ascii-collab.app"
+            , github = Just "https://github.com/MartinSStewart/ascii-collab"
+            }
+          , { youtube = Nothing
+            , website = Just "https://meetdown.app"
+            , github = Just "https://github.com/MartinSStewart/meetdown"
+            }
+          , { youtube = Nothing
+            , website = Just Env.domain
+            , github = Just "https://github.com/MartinSStewart/lamdera-presentation"
+            }
+          , { youtube = Just "https://www.youtube.com/watch?v=lw1E9sPbq28"
+            , website = Nothing
+            , github = Nothing
             }
           ]
             |> List.map
-                (\{ website, github } ->
+                (\{ youtube, website, github } ->
                     Element.column
                         [ Element.spacing 8 ]
-                        [ Element.row
-                            [ Element.spacing 8 ]
-                            [ Element.text "🔗"
-                            , Element.newTabLink
-                                [ secondaryFontSize
-                                , Element.Font.color (Element.rgb 0.3 0.4 0.8)
-                                , Element.Font.underline
-                                ]
-                                { url = website, label = Element.paragraph [] [ Element.text (removeHttps website) ] }
-                            ]
-                        , Element.row
-                            [ Element.spacing 8 ]
-                            [ githubLogo
-                            , Element.newTabLink
-                                [ secondaryFontSize
-                                , Element.Font.color (Element.rgb 0.3 0.4 0.8)
-                                , Element.Font.underline
-                                ]
-                                { url = website, label = Element.paragraph [] [ Element.text (removeHttps github) ] }
-                            ]
+                        [ case youtube of
+                            Just youtube_ ->
+                                Element.row
+                                    [ Element.spacing 8 ]
+                                    [ youtubeIcon
+                                    , Element.newTabLink
+                                        [ secondaryFontSize
+                                        , Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                        , Element.Font.underline
+                                        ]
+                                        { url = youtube_, label = Element.paragraph [] [ Element.text (removeHttps youtube_) ] }
+                                    ]
+
+                            Nothing ->
+                                Element.none
+                        , case website of
+                            Just website_ ->
+                                Element.row
+                                    [ Element.spacing 8 ]
+                                    [ Element.text "🔗"
+                                    , Element.newTabLink
+                                        [ secondaryFontSize
+                                        , Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                        , Element.Font.underline
+                                        ]
+                                        { url = website_, label = Element.paragraph [] [ Element.text (removeHttps website_) ] }
+                                    ]
+
+                            Nothing ->
+                                Element.none
+                        , case github of
+                            Just github_ ->
+                                Element.row
+                                    [ Element.spacing 8 ]
+                                    [ githubLogo
+                                    , Element.newTabLink
+                                        [ secondaryFontSize
+                                        , Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                        , Element.Font.underline
+                                        ]
+                                        { url = github_, label = Element.paragraph [] [ Element.text (removeHttps github_) ] }
+                                    ]
+
+                            Nothing ->
+                                Element.none
                         ]
                 )
-            |> Element.column [ Element.spacing 16 ]
+            |> Element.column [ Element.spacing 24 ]
         ]
     ]
+
+
+youtubeIcon =
+    Svg.svg
+        [ Svg.Attributes.width "17"
+        , Svg.Attributes.height "12"
+        , Svg.Attributes.viewBox "0 0 159 110"
+        ]
+        [ Svg.path
+            [ Svg.Attributes.d "m154 17.5c-1.82-6.73-7.07-12-13.8-13.8-9.04-3.49-96.6-5.2-122 0.1-6.73 1.82-12 7.07-13.8 13.8-4.08 17.9-4.39 56.6 0.1 74.9 1.82 6.73 7.07 12 13.8 13.8 17.9 4.12 103 4.7 122 0 6.73-1.82 12-7.07 13.8-13.8 4.35-19.5 4.66-55.8-0.1-75z"
+            , Svg.Attributes.fill "#f00"
+            ]
+            []
+        , Svg.path
+            [ Svg.Attributes.d "m105 55-40.8-23.4v46.8z"
+            , Svg.Attributes.fill "#fff"
+            ]
+            []
+        ]
+        |> Element.html
+        |> Element.el []
+
+
+checkbox isMobile isChecked_ =
+    Element.el
+        [ Element.width <| Element.px 18
+        , Element.height <| Element.px 18
+        , Element.Border.color (Element.rgb 0 0 0)
+        , Element.Border.width 1
+        , Element.moveDown
+            (if isMobile then
+                0
+
+             else
+                2
+            )
+        ]
+        (if isChecked_ then
+            Element.el [ Element.centerX, Element.centerY ] checkboxCheck
+
+         else
+            Element.none
+        )
+
+
+checkboxCheck : Element msg
+checkboxCheck =
+    Svg.svg
+        [ Svg.Attributes.width "16"
+        , Svg.Attributes.height "14"
+        , Svg.Attributes.viewBox "0 0 12 10"
+        , Svg.Attributes.fill "none"
+        ]
+        [ Svg.path
+            [ Svg.Attributes.d "M1.5 5.91734L3.3375 8.5251C3.4072 8.62921 3.50076 8.71517 3.61038 8.77583C3.72001 8.83648 3.84254 8.87008 3.96778 8.87382C4.09301 8.87756 4.21733 8.85134 4.33038 8.79734C4.44344 8.74333 4.54196 8.66311 4.61775 8.56334L10.5 1.12109"
+            , Svg.Attributes.stroke "#304FFE"
+            , Svg.Attributes.strokeWidth "1.7"
+            , Svg.Attributes.strokeLinecap "round"
+            , Svg.Attributes.strokeLinejoin "round"
+            ]
+            []
+        ]
+        |> Element.html
+        |> Element.el []
 
 
 removeHttps url =
@@ -464,7 +635,10 @@ import Types exposing (..)
 
 app =
     Lamdera.backend
-        { init = ( { currentColor = Blue, changeCount = 0, lastChangedBy = Nothing }, Cmd.none )
+        { init =
+            ( { currentColor = Blue, changeCount = 0, lastChangedBy = Nothing }
+            , Cmd.none
+            )
         , update = \\_ model -> ( model, Cmd.none )
         , updateFromFrontend = updateFromFrontend
         , subscriptions = \\_ -> Sub.none
@@ -490,6 +664,7 @@ updateFromFrontend sessionId clientId msg model =
             , Lamdera.broadcast (UpdateColor color changeCount)
             )
 """
+        |> SyntaxHighlight.elm
 
 
 code : String -> Element msg
@@ -515,11 +690,6 @@ checklist =
     , ( False, "Write backend business logic" )
     , ( False, "Write frontend business logic" )
     ]
-
-
-centered : Element msg -> Element msg
-centered element =
-    Element.el [ Element.centerX, Element.centerY ] element
 
 
 update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
