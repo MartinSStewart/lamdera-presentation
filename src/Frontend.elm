@@ -760,10 +760,10 @@ update msg model =
                         Lamdera.sendToBackend (ChangeSlideRequest newSlide)
 
                       else if
-                        (keyDown Keyboard.Alt || keyDown Keyboard.Meta)
-                            && keyPressed (Keyboard.Character "R")
+                        (keyDown Keyboard.Alt && keyPressed (Keyboard.Character "R"))
+                            || keyPressed (Keyboard.Character "®")
                       then
-                        Lamdera.sendToBackend ResetPresentation
+                        Lamdera.sendToBackend ResetPresentation |> Debug.log "a"
 
                       else
                         Cmd.none
