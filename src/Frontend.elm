@@ -763,7 +763,7 @@ update msg model =
                         (keyDown Keyboard.Alt && keyPressed (Keyboard.Character "R"))
                             || keyPressed (Keyboard.Character "®")
                       then
-                        Lamdera.sendToBackend ResetPresentation |> Debug.log "a"
+                        Lamdera.sendToBackend ResetPresentation
 
                       else
                         Cmd.none
