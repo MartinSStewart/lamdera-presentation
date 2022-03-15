@@ -97,6 +97,7 @@ slides isPresenter participantCount windowSize =
             [ Element.spacing 64
             , Element.centerX
             , Element.centerY
+            , Element.padding 16
             , (if participantCount > 1 then
                 String.fromInt (participantCount - 1)
                     ++ (if participantCount - 1 == 1 then
