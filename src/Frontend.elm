@@ -731,6 +731,9 @@ update msg model =
                         newKeys =
                             Keyboard.update keyMsg presenter.keys
 
+                        keyDown key =
+                            List.any ((==) key) presenter.keys
+
                         keyPressed key =
                             List.any ((==) key) presenter.keys && not (List.any ((==) key) newKeys)
 
@@ -754,6 +757,12 @@ update msg model =
                         }
                     , if presenter.currentSlide /= newSlide then
                         Lamdera.sendToBackend (ChangeSlideRequest newSlide)
+
+                      else if
+                        (keyDown Keyboard.Alt || keyDown Keyboard.Meta)
+                            && keyPressed (Keyboard.Character "R")
+                      then
+                        Lamdera.sendToBackend ResetPresentation
 
                       else
                         Cmd.none

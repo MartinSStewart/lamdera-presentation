@@ -62,6 +62,7 @@ type FrontendMsg
 type ToBackend
     = GetDataRequest (Maybe String)
     | ChangeSlideRequest Int
+    | ResetPresentation
 
 
 type BackendMsg

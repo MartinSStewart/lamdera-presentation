@@ -83,6 +83,9 @@ updateFromFrontend sessionId clientId msg model =
             else
                 ( model, Cmd.none )
 
+        ResetPresentation ->
+            ( { model | latestSlide = 0, participants = Set.empty }, Cmd.none )
+
 
 participantCount : BackendModel -> Int
 participantCount model =
