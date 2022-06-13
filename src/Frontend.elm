@@ -87,7 +87,7 @@ slides participantCount windowSize =
             Element.Font.size (ifMobile 18 36)
 
         title text =
-            Element.paragraph [ titleFontSize, Element.Region.heading 1 ] [ Element.text text ]
+            Element.paragraph [ titleFontSize, Element.Region.heading 1, Element.spacing 20 ] [ Element.text text ]
 
         waitingOnInteractiveSlide =
             Element.el
@@ -162,6 +162,14 @@ slides participantCount windowSize =
                     , github = Just "https://github.com/MartinSStewart/meetdown"
                     }
                   , { youtube = Nothing
+                    , website = Just "https://state-of-elm.lamdera.app/"
+                    , github = Just "https://github.com/MartinSStewart/state-of-elm"
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://sheep-game.lamdera.app/join/a217210861"
+                    , github = Nothing
+                    }
+                  , { youtube = Nothing
                     , website = Just "https://realia.se"
                     , github = Nothing
                     }
@@ -172,6 +180,10 @@ slides participantCount windowSize =
                   , { youtube = Nothing
                     , website = Just Env.domain
                     , github = Just "https://github.com/MartinSStewart/lamdera-presentation"
+                    }
+                  , { youtube = Nothing
+                    , website = Nothing
+                    , github = Just "https://github.com/MartinSStewart/elm-review-bot"
                     }
                   , { youtube = Just "https://www.youtube.com/watch?v=lw1E9sPbq28"
                     , website = Nothing
@@ -226,15 +238,14 @@ slides participantCount windowSize =
                                         Element.none
                                 ]
                         )
-                    |> Element.column [ Element.spacing 16 ]
+                    |> Element.column [ Element.spacing 24 ]
                 ]
     in
-    [ ( Element.el
+    [ ( Element.image
             [ Element.width Element.fill
-            , Element.height Element.fill
-            , Element.Background.image "aar-2022-banner-speaker 1.png"
+            , Element.centerY
             ]
-            Element.none
+            { src = "aar-2022-banner-speaker 1.png", description = "" }
       , Element.none
       )
     , ( Element.el
@@ -265,7 +276,7 @@ slides participantCount windowSize =
                 [ title "Hobby scale: making web apps with minimal fuss"
                 , Element.column
                     [ Element.spacing 8, Element.centerX ]
-                    [ Element.el [ Element.centerX ] (Element.text "This presentation is interactive, join here: ")
+                    [ Element.el [ Element.centerX, Element.Font.size 36 ] (Element.text "This presentation is interactive, join here: ")
                     , Element.el [ Element.centerX ] qrCodeElement
                     ]
                 ]
@@ -277,7 +288,6 @@ slides participantCount windowSize =
             columnHelper
             [ title "Quick disclaimer"
             , bulletList
-                isMobile
                 [ Element.text "I'm going to show off a tool called Lamdera."
                 , Element.text "I don't have any financial ties but I am friends with the creator of it"
                 ]
@@ -306,7 +316,6 @@ slides participantCount windowSize =
             columnHelper
             [ title "2 years ago I wouldn't have bothered making these apps"
             , bulletList
-                isMobile
                 [ Element.text "The business logic is simple"
                 , Element.text "But a lot of infrastructure work is still needed"
                 , Element.text "For a job I might tolerate that, but not in my free time!"
@@ -323,7 +332,7 @@ slides participantCount windowSize =
                 (List.map
                     (\( _, text ) ->
                         Element.row [ Element.spacing 12 ]
-                            [ Element.el [ Element.alignTop ] (checkbox isMobile False)
+                            [ Element.el [ Element.alignTop ] (checkbox False)
                             , Element.paragraph [] [ Element.text text ]
                             ]
                     )
@@ -337,7 +346,6 @@ slides participantCount windowSize =
             columnHelper
             [ title "2 years ago I started using a tool called Lamdera"
             , bulletList
-                isMobile
                 [ Element.text "Developed by Mario Rogic"
                 , Element.text "Opinionated platform for creating and hosting full stack web apps"
                 , Element.text "Apps are programmed using the Elm language"
@@ -356,10 +364,10 @@ slides participantCount windowSize =
                         Element.row [ Element.spacing 12 ]
                             [ Element.el [ Element.alignTop ]
                                 (if handledByLamdera then
-                                    checkbox isMobile True
+                                    checkbox True
 
                                  else
-                                    checkbox isMobile False
+                                    checkbox False
                                 )
                             , Element.paragraph [] [ Element.text text ]
                             ]
@@ -374,7 +382,6 @@ slides participantCount windowSize =
             columnHelper
             [ title "What does this look like in practice?"
             , numberedList
-                isMobile
                 [ code "lamdera init"
                 , code "lamdera live"
                 , Element.text "Write the business logic for the frontend and backend"
@@ -392,10 +399,10 @@ slides participantCount windowSize =
             , ifMobile
                 Element.none
                 (Element.image
-                    [ Element.width (Element.px 240)
+                    [ Element.width (Element.px 360)
                     , Element.alignRight
-                    , Element.moveRight 80
-                    , Element.moveUp 20
+                    , Element.moveRight 110
+                    , Element.moveUp 50
                     ]
                     { src = "best-color-files.png", description = "Best color files" }
                 )
@@ -408,7 +415,8 @@ slides participantCount windowSize =
                         |> Element.el
                             [ Element.padding 8
                             , Element.Background.color (Element.rgb255 40 44 52)
-                            , Element.Font.size (ifMobile 14 16)
+                            , Element.Font.size 24
+                            , Element.Border.glow (Element.rgba 0 0 0 0.2) 8
                             ]
 
                 Err _ ->
@@ -419,7 +427,7 @@ slides participantCount windowSize =
       )
     , ( Element.column
             [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 16, Element.Font.center ]
-            [ title "So it's quick to make simple stuff, but what about more complicated use cases?"
+            [ title "So it's quick to make simple stuff, but\u{00A0}what\u{00A0}about\u{00A0}more\u{00A0}complicated\u{00A0}use\u{00A0}cases?"
             ]
             |> standardSlide
       , moveInteractiveSlidesToCome
@@ -429,6 +437,12 @@ slides participantCount windowSize =
       )
     , ( iframeSlide "meetup.com but free!" "https://meetdown.app/"
       , iframe windowSize "https://meetdown.app/"
+      )
+    , ( iframeSlide "State of Elm survey" "https://state-of-elm.lamdera.app/"
+      , iframe windowSize "https://state-of-elm.lamdera.app/"
+      )
+    , ( iframeSlide "The Sheep Game" "https://sheep-game.lamdera.app/join/a217210861"
+      , iframe windowSize "https://sheep-game.lamdera.app/join/a217210861"
       )
     , let
         realiaLink =
@@ -446,23 +460,15 @@ slides participantCount windowSize =
     , ( Element.column
             columnHelper
             [ title "And more!"
-            , bulletList isMobile
+            , bulletList
                 [ Element.text "New years eve present for friends"
-                , Element.text "\"The sheep game\""
                 , Element.text "Reusing ascii-collab for a get-well-soon card"
                 , Element.text "Reusing ascii-collab for a goodbye card"
                 , Element.text "This presentation!"
-                , Element.row []
-                    [ Element.text "Another presentation! → "
-                    , Element.link
-                        [ Element.Font.color (Element.rgb 0.3 0.4 0.8), Element.Font.underline ]
-                        { url = "https://www.youtube.com/watch?v=lw1E9sPbq28"
-                        , label = Element.text "https://www.youtube.com/watch?v=lw1E9sPbq28"
-                        }
-                    ]
+                , Element.text "Another presentation!"
                 , Element.text "Translation editing app for work"
                 , Element.text "Discord bot"
-                , Element.text "Github bot"
+                , Element.text "elm-review Github bot"
                 ]
             ]
             |> standardSlide
@@ -471,7 +477,7 @@ slides participantCount windowSize =
     , ( Element.column
             columnHelper
             [ title "Tradeoffs"
-            , bulletList isMobile
+            , bulletList
                 [ Element.text "Elm only"
                 , Element.text "Limited CPU and memory resources (not web-scale)"
                 , Element.text "Vendor lock-in"
@@ -483,7 +489,7 @@ slides participantCount windowSize =
     , ( Element.column
             columnHelper
             [ title "In conclusion..."
-            , bulletList isMobile
+            , bulletList
                 [ Element.text "Lamdera is cool!"
                 , Element.text "It's not suitable for all web apps"
                 , Element.text "But when you can use it, it can save you a lot of effort"
@@ -493,12 +499,11 @@ slides participantCount windowSize =
       , noMoreInteractiveSlides
       )
     , ( linksSlide, linksSlide )
-    , ( Element.el
+    , ( Element.image
             [ Element.width Element.fill
-            , Element.height Element.fill
-            , Element.Background.image "aar-2022-banner-speaker 2.png"
+            , Element.centerY
             ]
-            Element.none
+            { src = "aar-2022-banner-speaker 2.png", description = "" }
       , linksSlide
       )
     ]
@@ -529,19 +534,14 @@ youtubeIcon =
         |> Element.el []
 
 
-checkbox isMobile isChecked_ =
+checkbox : Bool -> Element msg
+checkbox isChecked_ =
     Element.el
-        [ Element.width <| Element.px 18
-        , Element.height <| Element.px 18
+        [ Element.width <| Element.px 24
+        , Element.height <| Element.px 24
         , Element.Border.color (Element.rgb 0 0 0)
-        , Element.Border.width 1
-        , Element.moveDown
-            (if isMobile then
-                0
-
-             else
-                2
-            )
+        , Element.Border.width 2
+        , Element.moveDown 5
         ]
         (if isChecked_ then
             Element.el [ Element.centerX, Element.centerY ] checkboxCheck
@@ -554,14 +554,14 @@ checkbox isMobile isChecked_ =
 checkboxCheck : Element msg
 checkboxCheck =
     Svg.svg
-        [ Svg.Attributes.width "16"
-        , Svg.Attributes.height "14"
+        [ Svg.Attributes.width "22"
+        , Svg.Attributes.height "20"
         , Svg.Attributes.viewBox "0 0 12 10"
         , Svg.Attributes.fill "none"
         ]
         [ Svg.path
             [ Svg.Attributes.d "M1.5 5.91734L3.3375 8.5251C3.4072 8.62921 3.50076 8.71517 3.61038 8.77583C3.72001 8.83648 3.84254 8.87008 3.96778 8.87382C4.09301 8.87756 4.21733 8.85134 4.33038 8.79734C4.44344 8.74333 4.54196 8.66311 4.61775 8.56334L10.5 1.12109"
-            , Svg.Attributes.stroke "#304FFE"
+            , Svg.Attributes.stroke "currentColor"
             , Svg.Attributes.strokeWidth "1.7"
             , Svg.Attributes.strokeLinecap "round"
             , Svg.Attributes.strokeLinejoin "round"
@@ -598,23 +598,11 @@ githubLogo =
         |> Element.el []
 
 
-bulletList : Bool -> List (Element msg) -> Element msg
-bulletList isMobile elements =
+bulletList : List (Element msg) -> Element msg
+bulletList elements =
     Element.column
-        [ (if isMobile then
-            18
-
-           else
-            24
-          )
-            |> Element.Font.size
-        , Element.spacing
-            (if isMobile then
-                8
-
-             else
-                16
-            )
+        [ Element.Font.size 36
+        , Element.spacing 16
         , Element.padding 12
         ]
         (List.map
@@ -623,17 +611,11 @@ bulletList isMobile elements =
                     [ Element.spacing 12 ]
                     [ Element.el
                         [ Element.Background.color (Element.rgb 0 0 0)
-                        , Element.width (Element.px 8)
-                        , Element.height (Element.px 8)
+                        , Element.width (Element.px 12)
+                        , Element.height (Element.px 12)
                         , Element.Border.rounded 99
                         , Element.alignTop
-                        , Element.moveDown
-                            (if isMobile then
-                                4
-
-                             else
-                                8
-                            )
+                        , Element.moveDown 12
                         ]
                         Element.none
                     , Element.paragraph [] [ item ]
@@ -643,16 +625,10 @@ bulletList isMobile elements =
         )
 
 
-numberedList : Bool -> List (Element msg) -> Element msg
-numberedList isMobile elements =
+numberedList : List (Element msg) -> Element msg
+numberedList elements =
     Element.column
-        [ (if isMobile then
-            18
-
-           else
-            24
-          )
-            |> Element.Font.size
+        [ Element.Font.size 36
         , Element.spacing 16
         , Element.padding 12
         ]
@@ -939,12 +915,13 @@ view model =
     }
 
 
+qrCodeElement : Element msg
 qrCodeElement =
     case QRCode.fromString Env.domain of
         Ok qrCode ->
             QRCode.toSvg
-                [ Svg.Attributes.width "250px"
-                , Svg.Attributes.height "250px"
+                [ Svg.Attributes.width "400px"
+                , Svg.Attributes.height "400px"
                 ]
                 qrCode
                 |> Element.html
