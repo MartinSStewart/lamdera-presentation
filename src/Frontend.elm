@@ -81,13 +81,19 @@ slides participantCount windowSize =
                 ifFalse
 
         titleFontSize =
-            Element.Font.size (ifMobile 24 48)
+            Element.Font.size (ifMobile 24 40)
 
         secondaryFontSize =
             Element.Font.size (ifMobile 18 36)
 
         title text =
-            Element.paragraph [ titleFontSize, Element.Region.heading 1, Element.spacing 20 ] [ Element.text text ]
+            Element.paragraph
+                [ titleFontSize
+                , Element.Region.heading 1
+                , Element.spacing 20
+                , Element.Font.bold
+                ]
+                [ Element.text text ]
 
         waitingOnInteractiveSlide =
             Element.el
@@ -251,6 +257,7 @@ slides participantCount windowSize =
     , ( Element.el
             [ Element.width Element.fill
             , Element.height Element.fill
+            , Element.el [ Element.alignBottom, Element.padding 8, Element.Font.size 36 ] (Element.text Env.domain) |> Element.inFront
             ]
             (Element.column
                 [ Element.spacing 32
@@ -266,7 +273,7 @@ slides participantCount windowSize =
                                 " people have joined"
                            )
                         |> Element.text
-                        |> Element.el [ Element.centerX ]
+                        |> Element.el [ Element.centerX, secondaryFontSize ]
 
                    else
                     Element.none
@@ -281,7 +288,6 @@ slides participantCount windowSize =
                     ]
                 ]
             )
-            |> standardSlide
       , waitingOnInteractiveSlide
       )
     , ( Element.column
@@ -384,7 +390,7 @@ slides participantCount windowSize =
             , numberedList
                 [ code "lamdera init"
                 , code "lamdera live"
-                , Element.text "Write the business logic for the frontend and backend"
+                , Element.text "Write the business logic for the app"
                 , Element.text "Go to the lamdera dashboard to create an app and give it name"
                 , code "lamdera deploy"
                 ]
@@ -562,7 +568,7 @@ checkboxCheck =
         [ Svg.path
             [ Svg.Attributes.d "M1.5 5.91734L3.3375 8.5251C3.4072 8.62921 3.50076 8.71517 3.61038 8.77583C3.72001 8.83648 3.84254 8.87008 3.96778 8.87382C4.09301 8.87756 4.21733 8.85134 4.33038 8.79734C4.44344 8.74333 4.54196 8.66311 4.61775 8.56334L10.5 1.12109"
             , Svg.Attributes.stroke "currentColor"
-            , Svg.Attributes.strokeWidth "1.7"
+            , Svg.Attributes.strokeWidth "3.5"
             , Svg.Attributes.strokeLinecap "round"
             , Svg.Attributes.strokeLinejoin "round"
             ]
@@ -698,14 +704,12 @@ code text =
 
 checklist : List ( Bool, String )
 checklist =
-    [ ( True, "Set up database" )
-    , ( True, "Write code to query/write to database" )
-    , ( True, "Handle sending data to/from frontend/backend" )
-    , ( True, "Setup hot reloading and running backend locally" )
-    , ( True, "Deploy scripts for database, frontend, and backend" )
-    , ( True, "Setup server hosting" )
-    , ( False, "Write backend business logic" )
-    , ( False, "Write frontend business logic" )
+    [ ( True, "Database" )
+    , ( True, "Communicate to/from frontend/backend" )
+    , ( True, "Hot reloading and running backend locally" )
+    , ( True, "CI/CD" )
+    , ( True, "Hosting" )
+    , ( False, "Write the actual app" )
     ]
 
 
