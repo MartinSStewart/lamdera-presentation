@@ -67,8 +67,8 @@ init url key =
     )
 
 
-slides : Bool -> Int -> Size -> List (Element msg)
-slides isPresenter participantCount windowSize =
+slides : Int -> Size -> List ( Element msg, Element msg )
+slides participantCount windowSize =
     let
         isMobile =
             windowSize.width < 1000
@@ -81,400 +81,426 @@ slides isPresenter participantCount windowSize =
                 ifFalse
 
         titleFontSize =
-            Element.Font.size (ifMobile 24 32)
+            Element.Font.size (ifMobile 24 48)
 
         secondaryFontSize =
-            Element.Font.size (ifMobile 18 24)
+            Element.Font.size (ifMobile 18 36)
 
         title text =
             Element.paragraph [ titleFontSize, Element.Region.heading 1 ] [ Element.text text ]
+
+        waitingOnInteractiveSlide =
+            Element.el
+                [ Element.centerX, Element.centerY, secondaryFontSize ]
+                (Element.text "Nothing to interact with yet!")
+
+        moveInteractiveSlidesToCome =
+            Element.el
+                [ Element.centerX, Element.centerY, secondaryFontSize ]
+                (Element.text "More interactive slides to come!")
+
+        noMoreInteractiveSlides =
+            Element.el
+                [ Element.centerX, Element.centerY, secondaryFontSize ]
+                (Element.text "No more interactive slides :(")
+
+        standardSlide =
+            Element.el
+                [ Element.width Element.fill
+                , Element.height Element.fill
+                , Element.el [ Element.alignBottom, Element.padding 4 ] (Element.text Env.domain) |> Element.inFront
+                , Element.clip
+                ]
+
+        iframeSlide : String -> String -> Element msg
+        iframeSlide titleText src =
+            Element.column
+                [ Element.centerX, Element.centerY, Element.spacing 16 ]
+                [ ifMobile
+                    Element.none
+                    (Element.paragraph
+                        [ titleFontSize, Element.Font.center ]
+                        [ Element.text titleText ]
+                    )
+                , iframeWithShadow
+                    { width = windowSize.width - 80, height = windowSize.height - 140 }
+                    src
+                ]
+                |> standardSlide
+
+        linksSlide : Element msg
+        linksSlide =
+            Element.column
+                columnHelper
+                [ title "Links"
+                , [ { youtube = Nothing
+                    , website = Just "https://lamdera.com"
+                    , github = Nothing
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://dashboard.lamdera.app/shouldnt-use"
+                    , github = Nothing
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://the-best-color.lamdera.app"
+                    , github = Just "https://github.com/MartinSStewart/best-color"
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://question-and-answer.app"
+                    , github = Just "https://github.com/MartinSStewart/elm-qna"
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://moment-of-the-month.app/"
+                    , github = Just "https://github.com/MartinSStewart/elm-moment-of-the-month"
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://ascii-collab.app"
+                    , github = Just "https://github.com/MartinSStewart/ascii-collab"
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://meetdown.app"
+                    , github = Just "https://github.com/MartinSStewart/meetdown"
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://realia.se"
+                    , github = Nothing
+                    }
+                  , { youtube = Nothing
+                    , website = Just "https://air-hockey-racing.lamdera.app"
+                    , github = Just "https://github.com/MartinSStewart/air-hockey-racing"
+                    }
+                  , { youtube = Nothing
+                    , website = Just Env.domain
+                    , github = Just "https://github.com/MartinSStewart/lamdera-presentation"
+                    }
+                  , { youtube = Just "https://www.youtube.com/watch?v=lw1E9sPbq28"
+                    , website = Nothing
+                    , github = Nothing
+                    }
+                  ]
+                    |> List.map
+                        (\{ youtube, website, github } ->
+                            Element.column
+                                [ Element.spacing 8, Element.Font.size 16 ]
+                                [ case youtube of
+                                    Just youtube_ ->
+                                        Element.row
+                                            [ Element.spacing 4 ]
+                                            [ youtubeIcon
+                                            , Element.newTabLink
+                                                [ Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                                , Element.Font.underline
+                                                ]
+                                                { url = youtube_, label = Element.paragraph [] [ Element.text (removeHttps youtube_) ] }
+                                            ]
+
+                                    Nothing ->
+                                        Element.none
+                                , case website of
+                                    Just website_ ->
+                                        Element.row
+                                            [ Element.spacing 4 ]
+                                            [ Element.el [ Element.Font.size 14 ] (Element.text "🔗")
+                                            , Element.newTabLink
+                                                [ Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                                , Element.Font.underline
+                                                ]
+                                                { url = website_, label = Element.paragraph [] [ Element.text (removeHttps website_) ] }
+                                            ]
+
+                                    Nothing ->
+                                        Element.none
+                                , case github of
+                                    Just github_ ->
+                                        Element.row
+                                            [ Element.spacing 4 ]
+                                            [ githubLogo
+                                            , Element.newTabLink
+                                                [ Element.Font.color (Element.rgb 0.3 0.4 0.8)
+                                                , Element.Font.underline
+                                                ]
+                                                { url = github_, label = Element.paragraph [] [ Element.text (removeHttps github_) ] }
+                                            ]
+
+                                    Nothing ->
+                                        Element.none
+                                ]
+                        )
+                    |> Element.column [ Element.spacing 16 ]
+                ]
     in
-    [ Element.el
-        [ Element.width Element.fill
-        , Element.height Element.fill
-        ]
-        (Element.column
-            [ Element.spacing 64
-            , Element.centerX
-            , Element.centerY
-            , Element.padding 16
-            , (if participantCount > 1 then
-                String.fromInt (participantCount - 1)
-                    ++ (if participantCount - 1 == 1 then
-                            " person has joined"
-
-                        else
-                            " people have joined"
-                       )
-                    |> Element.text
-                    |> Element.el [ Element.centerX, Element.moveDown 24 ]
-
-               else
-                Element.none
-              )
-                |> Element.below
+    [ ( Element.el
+            [ Element.width Element.fill
+            , Element.height Element.fill
+            , Element.Background.image "aar-2022-banner-speaker 1.png"
             ]
-            [ title "Hobby scale: making web apps with minimal fuss"
-            , if isPresenter then
-                Element.column
+            Element.none
+      , Element.none
+      )
+    , ( Element.el
+            [ Element.width Element.fill
+            , Element.height Element.fill
+            ]
+            (Element.column
+                [ Element.spacing 32
+                , Element.centerX
+                , Element.centerY
+                , Element.padding 16
+                , (if participantCount > 1 then
+                    String.fromInt (participantCount - 1)
+                        ++ (if participantCount - 1 == 1 then
+                                " person has joined"
+
+                            else
+                                " people have joined"
+                           )
+                        |> Element.text
+                        |> Element.el [ Element.centerX ]
+
+                   else
+                    Element.none
+                  )
+                    |> Element.below
+                ]
+                [ title "Hobby scale: making web apps with minimal fuss"
+                , Element.column
                     [ Element.spacing 8, Element.centerX ]
                     [ Element.el [ Element.centerX ] (Element.text "This presentation is interactive, join here: ")
-                    , Element.el [ Element.centerX, secondaryFontSize ] (Element.text Env.domain)
                     , Element.el [ Element.centerX ] qrCodeElement
                     ]
-
-              else
-                Element.none
-            ]
-        )
-    , Element.column
-        columnHelper
-        [ title "Quick disclaimer"
-        , bulletList
-            isMobile
-            [ Element.text "I'm going to show off a tool called Lamdera."
-            , Element.text "I don't have any financial ties but I am friends with the creator of it"
-            ]
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
-        [ Element.el [ Element.centerX ] (title "A little about me:")
-        , Element.text "As a hobby, I make web apps"
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
-        [ ifMobile
-            Element.none
-            (Element.paragraph
-                [ titleFontSize, Element.Font.center ]
-                [ Element.text "Fight over which color is the best!" ]
-            )
-        , iframe
-            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
-            "https://the-best-color.lamdera.app"
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
-        [ ifMobile
-            Element.none
-            (Element.paragraph
-                [ titleFontSize, Element.Font.center ]
-                [ Element.text "Question and answer app" ]
-            )
-        , iframe
-            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
-            (if isPresenter then
-                Env.questionAndAnswerHostLink
-
-             else
-                Env.questionAndAnswerLink
-            )
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
-        [ ifMobile
-            Element.none
-            (Element.paragraph
-                [ titleFontSize, Element.Font.center ]
-                [ Element.text "Favorite moment this month?" ]
-            )
-        , iframe
-            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 120 }
-            Env.momentOfTheMonthLink
-        ]
-    , Element.column
-        columnHelper
-        [ title "2 years ago I wouldn't have bothered making these apps"
-        , bulletList
-            isMobile
-            [ Element.text "The business logic is simple"
-            , Element.text "But a lot of infrastructure work is still needed"
-            , Element.text "For a job I might tolerate that, but not in my free time!"
-            ]
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
-        [ title "Web app checklist"
-        , Element.column
-            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
-            (List.map
-                (\( _, text ) ->
-                    Element.row [ Element.spacing 12 ]
-                        [ Element.el [ Element.alignTop ] (checkbox isMobile False)
-                        , Element.paragraph [] [ Element.text text ]
-                        ]
-                )
-                checklist
-            )
-        ]
-    , Element.column
-        columnHelper
-        [ title "2 years ago I started using a tool called Lamdera"
-        , bulletList
-            isMobile
-            [ Element.text "Developed by Mario Rogic"
-            , Element.text "Opinionated platform for creating and hosting full stack web apps"
-            , Element.text "Apps are programmed using the Elm language"
-            ]
-        ]
-    , Element.column
-        columnHelper
-        [ title "Web app checklist (for Lamdera)"
-        , Element.column
-            [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
-            (List.map
-                (\( handledByLamdera, text ) ->
-                    Element.row [ Element.spacing 12 ]
-                        [ Element.el [ Element.alignTop ]
-                            (if handledByLamdera then
-                                checkbox isMobile True
-
-                             else
-                                checkbox isMobile False
-                            )
-                        , Element.paragraph [] [ Element.text text ]
-                        ]
-                )
-                checklist
-            )
-        ]
-    , Element.column
-        columnHelper
-        [ title "What does this look like in practice?"
-        , numberedList
-            isMobile
-            [ code "lamdera init"
-            , code "lamdera live"
-            , Element.text "Write the business logic for the frontend and backend"
-            , Element.text "Go to the lamdera dashboard to create an app and give it name"
-            , code "lamdera deploy"
-            ]
-        ]
-    , Element.el
-        [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront
-        , Element.centerX
-        , Element.centerY
-        , ifMobile
-            Element.none
-            (Element.image
-                [ Element.width (Element.px 240)
-                , Element.alignRight
-                , Element.moveRight 80
-                , Element.moveUp 20
                 ]
-                { src = "best-color-files.png", description = "Best color files" }
             )
-            |> Element.inFront
-        ]
-        (case bestColorBackend of
-            Ok hCode ->
-                Html.div [ Html.Attributes.style "white-space" "pre-wrap" ] [ SyntaxHighlight.toInlineHtml hCode ]
-                    |> Element.html
-                    |> Element.el
-                        [ Element.padding 8
-                        , Element.Background.color (Element.rgb255 40 44 52)
-                        , Element.Font.size (ifMobile 14 16)
-                        ]
+            |> standardSlide
+      , waitingOnInteractiveSlide
+      )
+    , ( Element.column
+            columnHelper
+            [ title "Quick disclaimer"
+            , bulletList
+                isMobile
+                [ Element.text "I'm going to show off a tool called Lamdera."
+                , Element.text "I don't have any financial ties but I am friends with the creator of it"
+                ]
+            ]
+            |> standardSlide
+      , waitingOnInteractiveSlide
+      )
+    , ( Element.column
+            [ Element.centerX, Element.centerY, titleFontSize, Element.spacing 16 ]
+            [ Element.el [ Element.centerX ] (title "A little about me:")
+            , Element.text "As a hobby, I make web apps"
+            ]
+            |> standardSlide
+      , waitingOnInteractiveSlide
+      )
+    , ( iframeSlide "Fight over which color is the best!" "https://the-best-color.lamdera.app"
+      , iframe windowSize "https://the-best-color.lamdera.app"
+      )
+    , ( iframeSlide "Question and answer app" Env.questionAndAnswerHostLink
+      , iframe windowSize Env.questionAndAnswerLink
+      )
+    , ( iframeSlide "Favorite moment this month?" Env.momentOfTheMonthLink
+      , iframe windowSize Env.momentOfTheMonthLink
+      )
+    , ( Element.column
+            columnHelper
+            [ title "2 years ago I wouldn't have bothered making these apps"
+            , bulletList
+                isMobile
+                [ Element.text "The business logic is simple"
+                , Element.text "But a lot of infrastructure work is still needed"
+                , Element.text "For a job I might tolerate that, but not in my free time!"
+                ]
+            ]
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( Element.column
+            [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
+            [ title "Web app checklist"
+            , Element.column
+                [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
+                (List.map
+                    (\( _, text ) ->
+                        Element.row [ Element.spacing 12 ]
+                            [ Element.el [ Element.alignTop ] (checkbox isMobile False)
+                            , Element.paragraph [] [ Element.text text ]
+                            ]
+                    )
+                    checklist
+                )
+            ]
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( Element.column
+            columnHelper
+            [ title "2 years ago I started using a tool called Lamdera"
+            , bulletList
+                isMobile
+                [ Element.text "Developed by Mario Rogic"
+                , Element.text "Opinionated platform for creating and hosting full stack web apps"
+                , Element.text "Apps are programmed using the Elm language"
+                ]
+            ]
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( Element.column
+            columnHelper
+            [ title "Web app checklist (for Lamdera)"
+            , Element.column
+                [ secondaryFontSize, Element.spacing 16, Element.padding 16 ]
+                (List.map
+                    (\( handledByLamdera, text ) ->
+                        Element.row [ Element.spacing 12 ]
+                            [ Element.el [ Element.alignTop ]
+                                (if handledByLamdera then
+                                    checkbox isMobile True
 
-            Err _ ->
+                                 else
+                                    checkbox isMobile False
+                                )
+                            , Element.paragraph [] [ Element.text text ]
+                            ]
+                    )
+                    checklist
+                )
+            ]
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( Element.column
+            columnHelper
+            [ title "What does this look like in practice?"
+            , numberedList
+                isMobile
+                [ code "lamdera init"
+                , code "lamdera live"
+                , Element.text "Write the business logic for the frontend and backend"
+                , Element.text "Go to the lamdera dashboard to create an app and give it name"
+                , code "lamdera deploy"
+                ]
+            ]
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( Element.el
+            [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront
+            , Element.centerX
+            , Element.centerY
+            , ifMobile
                 Element.none
-        )
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 16, Element.Font.center ]
-        [ title "So it's quick to make simple stuff, but what about more complicated use cases?"
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
-        [ ifMobile
-            Element.none
-            (Element.paragraph
-                [ titleFontSize, Element.Font.center ]
-                [ Element.text "Draw ascii art with friends!" ]
-            )
-        , iframe
-            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 140 }
-            Env.asciiCollabLink
-        ]
-    , Element.column
-        [ Element.centerX, Element.centerY, Element.spacing 16 ]
-        [ ifMobile
-            Element.none
-            (Element.paragraph
-                [ titleFontSize, Element.Font.center ]
-                [ Element.text "meetup.com but free!" ]
-            )
-        , iframe
-            { width = windowSize.width - ifMobile 0 80, height = windowSize.height - ifMobile 60 140 }
-            "https://meetdown.app/"
-        ]
-    , Element.column
-        [ Element.alignTop, Element.spacing 16, Element.padding 16, Element.width Element.fill ]
-        [ ifMobile
-            Element.none
-            (Element.paragraph
-                [ titleFontSize, Element.Font.center, Element.centerX ]
-                [ Element.text "Realia app" ]
-            )
-        , if isMobile then
-            Element.column
-                [ Element.spacing 16 ]
-                [ Element.image [ Element.width Element.fill ] { src = "realia-desktop.png", description = "Desktop screenshot" }
-                , Element.row
-                    [ Element.spacing 16 ]
-                    [ Element.image [ Element.width Element.fill ] { src = "realia-homepage.png", description = "Mobile homepage screenshot" }
-                    , Element.image [ Element.width Element.fill ] { src = "realia-mappage.png", description = "Mobile map page screenshot" }
+                (Element.image
+                    [ Element.width (Element.px 240)
+                    , Element.alignRight
+                    , Element.moveRight 80
+                    , Element.moveUp 20
                     ]
-                ]
-
-          else
-            Element.el
-                [ Element.width (Element.px 1320)
-                , Element.centerX
-                , Element.height Element.fill
-                , Element.image
-                    [ Element.width (Element.px 950), Element.moveDown 100 ]
-                    { src = "realia-desktop.png", description = "Desktop screenshot" }
-                    |> Element.inFront
-                , Element.image
-                    [ Element.width (Element.px 320), Element.moveRight 716 ]
-                    { src = "realia-homepage.png", description = "Mobile homepage screenshot" }
-                    |> Element.inFront
-                , Element.image
-                    [ Element.width (Element.px 320), Element.moveRight 1000, Element.moveDown 200 ]
-                    { src = "realia-mappage.png", description = "Mobile map page screenshot" }
-                    |> Element.inFront
-                ]
-                Element.none
-        ]
-    , Element.column
-        columnHelper
-        [ title "And more!"
-        , bulletList isMobile
-            [ Element.text "New years eve present for friends"
-            , Element.text "\"The sheep game\""
-            , Element.text "Reusing ascii-collab for a get-well-soon card"
-            , Element.text "Reusing ascii-collab for a goodbye card"
-            , Element.text "This presentation!"
-            , Element.row []
-                [ Element.text "Another presentation! → "
-                , Element.link
-                    [ Element.Font.color (Element.rgb 0.3 0.4 0.8), Element.Font.underline ]
-                    { url = "https://www.youtube.com/watch?v=lw1E9sPbq28"
-                    , label = Element.text "https://www.youtube.com/watch?v=lw1E9sPbq28"
-                    }
-                ]
-            , Element.text "Translation editing app for work"
-            , Element.text "Discord bot"
-            , Element.text "Github bot"
-            ]
-        ]
-    , Element.column
-        columnHelper
-        [ title "Tradeoffs"
-        , bulletList isMobile
-            [ Element.text "Elm only"
-            , Element.text "Limited CPU and memory resources (not web-scale)"
-            , Element.text "Vendor lock-in"
-            ]
-        ]
-    , Element.column
-        columnHelper
-        [ title "In conclusion..."
-        , bulletList isMobile
-            [ Element.text "Lamdera is cool!"
-            , Element.text "It's not suitable for all web apps"
-            , Element.text "But when you can use it, it can save you a lot of effort"
-            ]
-        ]
-    , Element.column
-        columnHelper
-        [ title "Links"
-        , [ { youtube = Nothing
-            , website = Just "https://lamdera.com"
-            , github = Nothing
-            }
-          , { youtube = Nothing
-            , website = Just "https://the-best-color.lamdera.app"
-            , github = Just "https://github.com/MartinSStewart/best-color"
-            }
-          , { youtube = Nothing
-            , website = Just "https://question-and-answer.app"
-            , github = Just "https://github.com/MartinSStewart/elm-qna"
-            }
-          , { youtube = Nothing
-            , website = Just "https://moment-of-the-month.lamdera.app"
-            , github = Just "https://github.com/MartinSStewart/elm-moment-of-the-month"
-            }
-          , { youtube = Nothing
-            , website = Just "https://ascii-collab.app"
-            , github = Just "https://github.com/MartinSStewart/ascii-collab"
-            }
-          , { youtube = Nothing
-            , website = Just "https://meetdown.app"
-            , github = Just "https://github.com/MartinSStewart/meetdown"
-            }
-          , { youtube = Nothing
-            , website = Just Env.domain
-            , github = Just "https://github.com/MartinSStewart/lamdera-presentation"
-            }
-          , { youtube = Just "https://www.youtube.com/watch?v=lw1E9sPbq28"
-            , website = Nothing
-            , github = Nothing
-            }
-          ]
-            |> List.map
-                (\{ youtube, website, github } ->
-                    Element.column
-                        [ Element.spacing 8 ]
-                        [ case youtube of
-                            Just youtube_ ->
-                                Element.row
-                                    [ Element.spacing 8 ]
-                                    [ youtubeIcon
-                                    , Element.newTabLink
-                                        [ secondaryFontSize
-                                        , Element.Font.color (Element.rgb 0.3 0.4 0.8)
-                                        , Element.Font.underline
-                                        ]
-                                        { url = youtube_, label = Element.paragraph [] [ Element.text (removeHttps youtube_) ] }
-                                    ]
-
-                            Nothing ->
-                                Element.none
-                        , case website of
-                            Just website_ ->
-                                Element.row
-                                    [ Element.spacing 8 ]
-                                    [ Element.text "🔗"
-                                    , Element.newTabLink
-                                        [ secondaryFontSize
-                                        , Element.Font.color (Element.rgb 0.3 0.4 0.8)
-                                        , Element.Font.underline
-                                        ]
-                                        { url = website_, label = Element.paragraph [] [ Element.text (removeHttps website_) ] }
-                                    ]
-
-                            Nothing ->
-                                Element.none
-                        , case github of
-                            Just github_ ->
-                                Element.row
-                                    [ Element.spacing 8 ]
-                                    [ githubLogo
-                                    , Element.newTabLink
-                                        [ secondaryFontSize
-                                        , Element.Font.color (Element.rgb 0.3 0.4 0.8)
-                                        , Element.Font.underline
-                                        ]
-                                        { url = github_, label = Element.paragraph [] [ Element.text (removeHttps github_) ] }
-                                    ]
-
-                            Nothing ->
-                                Element.none
-                        ]
+                    { src = "best-color-files.png", description = "Best color files" }
                 )
-            |> Element.column [ Element.spacing 24 ]
-        ]
+                |> Element.inFront
+            ]
+            (case bestColorBackend of
+                Ok hCode ->
+                    Html.div [ Html.Attributes.style "white-space" "pre-wrap" ] [ SyntaxHighlight.toInlineHtml hCode ]
+                        |> Element.html
+                        |> Element.el
+                            [ Element.padding 8
+                            , Element.Background.color (Element.rgb255 40 44 52)
+                            , Element.Font.size (ifMobile 14 16)
+                            ]
+
+                Err _ ->
+                    Element.none
+            )
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( Element.column
+            [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 16, Element.Font.center ]
+            [ title "So it's quick to make simple stuff, but what about more complicated use cases?"
+            ]
+            |> standardSlide
+      , moveInteractiveSlidesToCome
+      )
+    , ( iframeSlide "Draw ascii art with friends!" Env.asciiCollabLink
+      , iframe windowSize Env.asciiCollabLink
+      )
+    , ( iframeSlide "meetup.com but free!" "https://meetdown.app/"
+      , iframe windowSize "https://meetdown.app/"
+      )
+    , let
+        realiaLink =
+            "https://realia.lamdera.app/map?a=AQABAAAAm0VpQkxkVzVuYzJkaGRHRnVJREVzSUZOMGIyTnJhRzlzYlN3Z1UzWmxjbWxuWlNKUUVrNEtOQW95Q2VXMHM1VmNuVjlHRVdPS2Q1WmdVS1lsR2g0TEVPN0I3cUVCR2hRS0VnbkpFbUh5WEoxZlJoRVNWZ1lYOF80QUV3d1FBU29VQ2hJSmZRekZTbWVkWDBZUnlveGxSUUpSMzg0AAAAF0t1bmdzZ2F0YW4gMSwgU3RvY2tob2xtAAAAmkVoOVFiM04wWjJGMFlXNGdNU3dnUjhPMmRHVmliM0puTENCVGRtVnlhV2RsSWxBU1RnbzBDaklKWjhlVUFtZnpUMFlSQkRNMHdMdC1pZ0FhSGdzUTdzSHVvUUVhRkFvU0NibHJfejFuODA5R0VUT1Y5d2Q0a0FFTERCQUJLaFFLRWdtbEtpenJadk5QUmhHVy1XM2MwZjI5cncAAAAWUG9zdGdhdGFuIDEsIEfDtnRlYm9yZwAAAAAABAAD"
+      in
+      ( iframeSlide "Realia app" realiaLink
+      , iframeWithShadow windowSize realiaLink
+      )
+    , ( iframeSlide "Multiplayer game" "https://air-hockey-racing.lamdera.app"
+      , moveInteractiveSlidesToCome
+      )
+    , ( iframeSlide "Multiplayer game (with the audience?)" "https://air-hockey-racing.lamdera.app"
+      , iframe windowSize "https://air-hockey-racing.lamdera.app"
+      )
+    , ( Element.column
+            columnHelper
+            [ title "And more!"
+            , bulletList isMobile
+                [ Element.text "New years eve present for friends"
+                , Element.text "\"The sheep game\""
+                , Element.text "Reusing ascii-collab for a get-well-soon card"
+                , Element.text "Reusing ascii-collab for a goodbye card"
+                , Element.text "This presentation!"
+                , Element.row []
+                    [ Element.text "Another presentation! → "
+                    , Element.link
+                        [ Element.Font.color (Element.rgb 0.3 0.4 0.8), Element.Font.underline ]
+                        { url = "https://www.youtube.com/watch?v=lw1E9sPbq28"
+                        , label = Element.text "https://www.youtube.com/watch?v=lw1E9sPbq28"
+                        }
+                    ]
+                , Element.text "Translation editing app for work"
+                , Element.text "Discord bot"
+                , Element.text "Github bot"
+                ]
+            ]
+            |> standardSlide
+      , noMoreInteractiveSlides
+      )
+    , ( Element.column
+            columnHelper
+            [ title "Tradeoffs"
+            , bulletList isMobile
+                [ Element.text "Elm only"
+                , Element.text "Limited CPU and memory resources (not web-scale)"
+                , Element.text "Vendor lock-in"
+                ]
+            ]
+            |> standardSlide
+      , noMoreInteractiveSlides
+      )
+    , ( Element.column
+            columnHelper
+            [ title "In conclusion..."
+            , bulletList isMobile
+                [ Element.text "Lamdera is cool!"
+                , Element.text "It's not suitable for all web apps"
+                , Element.text "But when you can use it, it can save you a lot of effort"
+                ]
+            ]
+            |> standardSlide
+      , noMoreInteractiveSlides
+      )
+    , ( linksSlide, linksSlide )
+    , ( Element.el
+            [ Element.width Element.fill
+            , Element.height Element.fill
+            , Element.Background.image "aar-2022-banner-speaker 2.png"
+            ]
+            Element.none
+      , linksSlide
+      )
     ]
 
 
@@ -749,7 +775,7 @@ update msg model =
                              else
                                 presenter.currentSlide
                             )
-                                |> clamp 0 (List.length (slides True presenter.participants presenter.windowSize))
+                                |> clamp 0 (List.length (slides presenter.participants presenter.windowSize))
                     in
                     ( Presenter
                         { presenter
@@ -894,61 +920,20 @@ view model =
                     Element.none
 
                 Presenter presenter ->
-                    List.getAt presenter.currentSlide (slides True presenter.participants presenter.windowSize)
-                        |> Maybe.withDefault Element.none
+                    case List.getAt presenter.currentSlide (slides presenter.participants presenter.windowSize) of
+                        Just ( slide, _ ) ->
+                            slide
+
+                        Nothing ->
+                            Element.none
 
                 Viewer viewer ->
-                    Element.column
-                        [ Element.width Element.fill
-                        , Element.height Element.fill
-                        , Element.spacing 4
-                        ]
-                        [ case List.getAt viewer.currentSlide (slides False viewer.participants viewer.windowSize) of
-                            Just slide ->
-                                Element.el
-                                    [ Element.Region.mainContent
-                                    , Element.width Element.fill
-                                    , Element.height Element.fill
-                                    ]
-                                    slide
+                    case List.getAt viewer.currentSlide (slides viewer.participants viewer.windowSize) of
+                        Just ( _, slide ) ->
+                            slide
 
-                            Nothing ->
-                                Element.none
-                        , Element.row
-                            [ Element.centerX
-                            , Element.width <| Element.maximum 800 Element.fill
-                            , Element.Region.navigation
-                            , Element.spacing 4
-                            , Element.alignBottom
-                            ]
-                            [ Element.Input.button
-                                [ Element.padding 16
-                                , Element.width Element.fill
-                                , Element.Background.color (Element.rgb 0.6 0.6 0.6)
-                                , if viewer.currentSlide > 0 then
-                                    Element.alpha 1
-
-                                  else
-                                    Element.alpha 0.5
-                                ]
-                                { onPress = Just PressedGotoPreviousSlide
-                                , label = Element.el [ Element.centerX ] (Element.text "← Previous")
-                                }
-                            , Element.Input.button
-                                [ Element.padding 16
-                                , Element.width Element.fill
-                                , Element.Background.color (Element.rgb 0.6 0.6 0.6)
-                                , if viewer.currentSlide < viewer.latestSlide then
-                                    Element.alpha 1
-
-                                  else
-                                    Element.alpha 0.5
-                                ]
-                                { onPress = Just PressedGotoNextSlide
-                                , label = Element.el [ Element.centerX ] (Element.text "Next →")
-                                }
-                            ]
-                        ]
+                        Nothing ->
+                            Element.none
             )
         ]
     }
@@ -978,4 +963,12 @@ iframe { width, height } src =
         ]
         []
         |> Element.html
-        |> Element.el [ Element.centerX, Element.Border.shadow { offset = ( 0, 2 ), blur = 8, size = 0, color = Element.rgba 0 0 0 0.4 } ]
+
+
+iframeWithShadow : { width : Int, height : Int } -> String -> Element msg
+iframeWithShadow size src =
+    Element.el
+        [ Element.centerX
+        , Element.Border.shadow { offset = ( 0, 2 ), blur = 8, size = 0, color = Element.rgba 0 0 0 0.4 }
+        ]
+        (iframe size src)
