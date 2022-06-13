@@ -81,10 +81,10 @@ slides participantCount windowSize =
                 ifFalse
 
         titleFontSize =
-            Element.Font.size (ifMobile 24 32)
+            Element.Font.size (ifMobile 24 48)
 
         secondaryFontSize =
-            Element.Font.size (ifMobile 18 24)
+            Element.Font.size (ifMobile 18 36)
 
         title text =
             Element.paragraph [ titleFontSize, Element.Region.heading 1 ] [ Element.text text ]
@@ -112,6 +112,7 @@ slides participantCount windowSize =
                 , Element.clip
                 ]
 
+        iframeSlide : String -> String -> Element msg
         iframeSlide titleText src =
             Element.column
                 [ Element.centerX, Element.centerY, Element.spacing 16 ]
@@ -122,11 +123,12 @@ slides participantCount windowSize =
                         [ Element.text titleText ]
                     )
                 , iframeWithShadow
-                    { width = windowSize.width - 80, height = windowSize.height - 120 }
+                    { width = windowSize.width - 80, height = windowSize.height - 140 }
                     src
                 ]
                 |> standardSlide
 
+        linksSlide : Element msg
         linksSlide =
             Element.column
                 columnHelper
