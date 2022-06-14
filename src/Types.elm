@@ -55,8 +55,6 @@ type FrontendMsg
     | UrlChanged Url
     | KeyboardMsg Keyboard.Msg
     | GotWindowSize Size
-    | PressedGotoPreviousSlide
-    | PressedGotoNextSlide
 
 
 type ToBackend

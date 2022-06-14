@@ -755,7 +755,7 @@ update msg model =
                              else
                                 presenter.currentSlide
                             )
-                                |> clamp 0 (List.length (slides presenter.participants presenter.windowSize))
+                                |> clamp 0 (List.length (slides presenter.participants presenter.windowSize) - 1)
                     in
                     ( Presenter
                         { presenter
@@ -788,32 +788,6 @@ update msg model =
 
                 Viewer viewer ->
                     Viewer { viewer | windowSize = size }
-            , Cmd.none
-            )
-
-        PressedGotoPreviousSlide ->
-            ( case model of
-                Loading _ _ _ ->
-                    model
-
-                Presenter _ ->
-                    model
-
-                Viewer viewer ->
-                    Viewer { viewer | currentSlide = viewer.currentSlide - 1 |> max 0 }
-            , Cmd.none
-            )
-
-        PressedGotoNextSlide ->
-            ( case model of
-                Loading _ _ _ ->
-                    model
-
-                Presenter _ ->
-                    model
-
-                Viewer viewer ->
-                    Viewer { viewer | currentSlide = viewer.currentSlide + 1 |> min viewer.latestSlide }
             , Cmd.none
             )
 
