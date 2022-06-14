@@ -100,7 +100,7 @@ slides participantCount windowSize =
                 [ Element.centerX, Element.centerY, secondaryFontSize ]
                 (Element.text "Nothing to interact with yet!")
 
-        moveInteractiveSlidesToCome =
+        moreInteractiveSlidesToCome =
             Element.el
                 [ Element.centerX, Element.centerY, secondaryFontSize ]
                 (Element.text "More interactive slides to come!")
@@ -328,7 +328,7 @@ slides participantCount windowSize =
                 ]
             ]
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( Element.column
             [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 8 ]
@@ -346,7 +346,7 @@ slides participantCount windowSize =
                 )
             ]
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( Element.column
             columnHelper
@@ -358,7 +358,7 @@ slides participantCount windowSize =
                 ]
             ]
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( Element.column
             columnHelper
@@ -382,7 +382,7 @@ slides participantCount windowSize =
                 )
             ]
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( Element.column
             columnHelper
@@ -396,7 +396,7 @@ slides participantCount windowSize =
                 ]
             ]
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( Element.el
             [ SyntaxHighlight.useTheme SyntaxHighlight.oneDark |> Element.html |> Element.inFront
@@ -429,17 +429,20 @@ slides participantCount windowSize =
                     Element.none
             )
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( Element.column
             [ Element.centerX, Element.centerY, Element.spacing 8, Element.padding 16, Element.Font.center ]
             [ title "So it's quick to make simple stuff, but\u{00A0}what\u{00A0}about\u{00A0}more\u{00A0}complicated\u{00A0}use\u{00A0}cases?"
             ]
             |> standardSlide
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( iframeSlide "Draw ascii art with friends!" Env.asciiCollabLink
       , iframe windowSize Env.asciiCollabLink
+      )
+    , ( Element.image [ Element.width Element.fill ] { src = "https://ascii-collab.app/poster-irl.jpg", description = "" }
+      , moreInteractiveSlidesToCome
       )
     , ( iframeSlide "meetup.com but free!" "https://meetdown.app/"
       , iframe windowSize "https://meetdown.app/"
@@ -458,7 +461,7 @@ slides participantCount windowSize =
       , iframeWithShadow windowSize realiaLink
       )
     , ( iframeSlide "Multiplayer game" "https://air-hockey-racing.lamdera.app"
-      , moveInteractiveSlidesToCome
+      , moreInteractiveSlidesToCome
       )
     , ( iframeSlide "Multiplayer game (with the audience?)" "https://air-hockey-racing.lamdera.app"
       , iframe windowSize "https://air-hockey-racing.lamdera.app"
