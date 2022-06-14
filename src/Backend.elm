@@ -23,7 +23,7 @@ app =
 
 init : ( BackendModel, Cmd BackendMsg )
 init =
-    ( { participants = Set.empty, latestSlide = 0, presenter = Nothing }
+    ( { participants = Set.empty, currentSlide = 0, presenter = Nothing }
     , Cmd.none
     )
 
@@ -56,7 +56,7 @@ updateFromFrontend sessionId clientId msg model =
             in
             if maybePassword == Just Env.password || model.presenter == Just sessionId then
                 ( { model | presenter = Just sessionId }
-                , { participants = participants, latestSlide = model.latestSlide }
+                , { participants = participants, currentSlide = model.currentSlide }
                     |> PresenterData
                     |> GetDataResponse
                     |> Lamdera.sendToFrontend clientId
@@ -64,7 +64,7 @@ updateFromFrontend sessionId clientId msg model =
 
             else
                 ( model
-                , { participants = participants, latestSlide = model.latestSlide }
+                , { participants = participants, currentSlide = model.currentSlide }
                     |> ViewerData
                     |> GetDataResponse
                     |> Lamdera.sendToFrontend clientId
@@ -72,11 +72,7 @@ updateFromFrontend sessionId clientId msg model =
 
         ChangeSlideRequest slide ->
             if Just sessionId == model.presenter then
-                let
-                    newLatestSlide =
-                        max model.latestSlide slide
-                in
-                ( { model | latestSlide = newLatestSlide }
+                ( { model | currentSlide = slide }
                 , Lamdera.broadcast (ChangeSlideNotification slide)
                 )
 
@@ -84,7 +80,7 @@ updateFromFrontend sessionId clientId msg model =
                 ( model, Cmd.none )
 
         ResetPresentation ->
-            ( { model | latestSlide = 0, participants = Set.empty }, Cmd.none )
+            ( { model | currentSlide = 0, participants = Set.empty }, Cmd.none )
 
 
 participantCount : BackendModel -> Int

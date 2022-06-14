@@ -45,7 +45,7 @@ getKey model =
 
 type alias BackendModel =
     { participants : Set ( SessionId, ClientId )
-    , latestSlide : Int
+    , currentSlide : Int
     , presenter : Maybe SessionId
     }
 
@@ -80,4 +80,4 @@ type Data
 
 
 type alias LoadingData =
-    { latestSlide : Int, participants : Int }
+    { currentSlide : Int, participants : Int }

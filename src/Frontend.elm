@@ -841,19 +841,19 @@ updateFromBackend msg model =
 tryLoading : Browser.Navigation.Key -> Maybe Size -> Maybe Data -> FrontendModel
 tryLoading navigationKey maybeWindowSize maybeData =
     case ( maybeData, maybeWindowSize ) of
-        ( Just (PresenterData { participants, latestSlide }), Just windowSize ) ->
+        ( Just (PresenterData { participants, currentSlide }), Just windowSize ) ->
             Presenter
-                { currentSlide = latestSlide
+                { currentSlide = currentSlide
                 , navigationKey = navigationKey
                 , participants = participants
                 , keys = []
                 , windowSize = windowSize
                 }
 
-        ( Just (ViewerData { participants, latestSlide }), Just windowSize ) ->
+        ( Just (ViewerData { participants, currentSlide }), Just windowSize ) ->
             Viewer
-                { currentSlide = latestSlide
-                , latestSlide = latestSlide
+                { currentSlide = currentSlide
+                , latestSlide = currentSlide
                 , navigationKey = navigationKey
                 , participants = participants
                 , windowSize = windowSize
