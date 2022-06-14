@@ -23,7 +23,7 @@ app =
 
 init : ( BackendModel, Cmd BackendMsg )
 init =
-    ( { participants = Set.empty, currentSlide = 0, presenter = Nothing }
+    ( { participants = Set.empty, currentSlide = 0, dummyChange = 0, presenter = Nothing }
     , Cmd.none
     )
 
