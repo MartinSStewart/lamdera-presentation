@@ -46,6 +46,7 @@ getKey model =
 type alias BackendModel =
     { participants : Set ( SessionId, ClientId )
     , currentSlide : Int
+    , dummyChange : Float
     , presenter : Maybe SessionId
     }
 
