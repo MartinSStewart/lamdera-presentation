@@ -444,6 +444,13 @@ slides participantCount windowSize =
     , ( Element.image [ Element.width Element.fill ] { src = "https://ascii-collab.app/poster-irl.jpg", description = "" }
       , moreInteractiveSlidesToCome
       )
+    , ( Element.row
+            [ Element.height Element.fill ]
+            [ Element.image [ Element.height Element.fill ] { src = "https://ascii-collab.app/mug-front.jpg", description = "" }
+            , Element.image [ Element.height Element.fill ] { src = "https://ascii-collab.app/mug-back.jpg", description = "" }
+            ]
+      , moreInteractiveSlidesToCome
+      )
     , ( iframeSlide "meetup.com but free!" "https://meetdown.app/"
       , iframe windowSize "https://meetdown.app/"
       )
